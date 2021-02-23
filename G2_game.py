@@ -56,6 +56,34 @@ class Entity():
         self.pos.add(self.velocity)
         self.velocity *= 0.85
 
+#Extends Entity
+class Player(Entity):
+    def shoot(self):
+        bullets.append(Bullet())
+
+#Extends Entity
+class Bullet(Entity):
+    ##Presets variables instead of needing them custom set, because it knows its a bullet
+    ##Maybe add custom variable to initialiser for damage, speed? For different guns?
+    def __init__(self):
+        self.sprite = bulletSprite
+        ##Seems silly to do it like this, but direct referencing means shared position!
+        self.pos = Vector(player.pos.x, player.pos.y)
+        self.radius = max(4, 4)
+
+        self.velocity = Vector(10, 0)
+
+    #Draw inhereted from Entity
+
+    def update(self):
+        self.pos.add(self.velocity)
+        ##bullets dont slow down!
+
+        ##If bullet touching thing, then do damage and stuff!
+        #if (touching thing):
+            #do damage
+            #remove self from bullets list
+
 class Clock():
     time = 0
 
@@ -80,7 +108,8 @@ class Keyboard:
             self.right = True
         if key == simplegui.KEY_MAP['space']:
             self.space = True
-
+        if key == simplegui.KEY_MAP['f']:
+            player.shoot()
 
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:
@@ -119,19 +148,27 @@ def draw(canvas):
     clock.tick()
     player.update()
     player.draw(canvas)
+
+    for i in bullets:
+        i.update()
+        i.draw(canvas)
     
 #Defines a sprite!
 SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
 #player sheet dimensions 610 x 329
 
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), (150, 329/6), (100, 100))
+###NEED BULLET SPRITE PLS TY
+bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), (150, 329/6), (100, 100))
+
 
 kbd = Keyboard()
 clock = Clock()
 
-player = Entity(playerSprite, Vector(200, 650), 50, 10, 20)
+player = Player(playerSprite, Vector(200, 650), 50, 10, 20)
 inter = Interaction(player, kbd)
 
+bullets = []
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("G2 game", CANVAS_WIDTH, CANVAS_HEIGHT)
