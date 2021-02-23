@@ -1,5 +1,5 @@
 Zombie running
-http://personal.rhul.ac.uk/zhac/315/zombie_running.png
+http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png
 
 Player sheet
 http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png
