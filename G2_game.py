@@ -13,19 +13,21 @@ CANVAS_DIMS = (1280, 720)
 CANVAS_WIDTH = 1280
 CANVAS_HEIGHT = 720
 
+#Background sprite
+BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png')
+
 ##For non-spritesheet based sprites
 class Sprite:
     def __init__(self, IMG, IMG_CENTRE, IMG_DIMS):
         self.IMG = IMG
         self.IMG_CENTRE = IMG_CENTRE
         self.IMG_DIMS = IMG_DIMS
-
-        self.img_dest_dim = (self.IMG_DIMS[0]/2, self.IMG_DIMS[1]/2)
+        self.img_dest_dim = (self.IMG_DIMS[0]*0.8, self.IMG_DIMS[1]*0.8)
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
 
     #Pos = Position in game world
     def draw(self, canvas, pos):
-        canvas.draw_image(self.IMG, self.IMG_CENTRE, self.IMG_DIMS, [pos[0],pos[1]], self.img_dest_dim, 0)
+        canvas.draw_image(self.IMG, self.IMG_CENTRE, self.IMG_DIMS, [pos.x,pos.y], self.img_dest_dim, 0)
 
 ##Must be edited to handle spritesheets
 class Spritesheet(Sprite):
@@ -35,25 +37,24 @@ class Spritesheet(Sprite):
 
 ##All Entities have: An assigned sprite, Position, Radius (idk what that does), Movement speed, Jump height
 class Entity():
-    def __init__(self, sprite, pos, radius, movespeed, jumpheight):
+    def __init__(self, sprite, pos, radius, speed, jumpheight):
         self.sprite = sprite
         
         self.pos = pos
         self.radius = max(radius, 4)
 
-        self.speed = movespeed
+        self.speed = speed
         self.jumpheight = jumpheight
 
         self.velocity = Vector(0,0)
         
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
-        print(self.pos)
         self.sprite.draw(canvas, self.pos)
 
     def update(self):
-        self.pos += self.velocity
-        self.velocity *= 0.9
+        self.pos.add(self.velocity)
+        self.velocity *= 0.85
 
 class Clock():
     time = 0
@@ -70,18 +71,24 @@ class Keyboard:
     def __init__(self):
         self.left = False
         self.right = False
+        self.space = False
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
             self.left = True
         if key == simplegui.KEY_MAP['d']:
             self.right = True
+        if key == simplegui.KEY_MAP['space']:
+            self.space = True
+
 
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:
             self.left = False
         if key == simplegui.KEY_MAP['d']:
             self.right = False
+        if key == simplegui.KEY_MAP['space']:
+            self.space = False
 
 class Interaction:
     def __init__(self, player, keyboard):
@@ -93,24 +100,36 @@ class Interaction:
 
     def update(self):
         if self.keyboard.left:
-            self.player.pos[0] -= self.player.speed/5
+            self.player.sprite.IMG_CENTRE = (50,(329/6)*3)
+            self.player.velocity.add(Vector(-1, 0))
         if self.keyboard.right:
-            self.player.pos[0] += self.player.speed/5
+            self.player.sprite.IMG_CENTRE = (150,(329/6)*5)
+            self.player.velocity.add(Vector(1, 0))
+        if self.keyboard.space:
+            self.player.velocity.add(Vector(0, -2))
 
 def draw(canvas):
+    canvas.draw_image(BACKDROP_SPRITE, 
+                      (1280/2,720/2), 
+                      (1280,720), 
+                      (1280/2,720/2), 
+                      (1280,720), 
+                      0)
     inter.update()
     clock.tick()
-
     player.update()
     player.draw(canvas)
     
 #Defines a sprite!
-playerSprite = Sprite(simplegui._load_local_image('.\\sprite folder\\character\\main_chara_spritesheets\\mc_Idle_right.png'), (50, 50), (100, 100))
+SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
+#player sheet dimensions 610 x 329
+
+playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), (150, 329/6), (100, 100))
 
 kbd = Keyboard()
 clock = Clock()
 
-player = Entity(playerSprite, (200, 200), 50, 10, 20)
+player = Entity(playerSprite, Vector(200, 650), 50, 10, 20)
 inter = Interaction(player, kbd)
 
 
