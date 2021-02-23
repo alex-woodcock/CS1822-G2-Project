@@ -1,0 +1,8 @@
+Zombie running
+http://personal.rhul.ac.uk/zhac/315/zombie_running.png
+
+Player sheet
+http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png
+
+Background
+http://personal.rhul.ac.uk/zhac/315/backdrop.png
