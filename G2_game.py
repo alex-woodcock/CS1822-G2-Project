@@ -22,7 +22,7 @@ class Sprite:
         self.IMG = IMG
         self.IMG_CENTRE = IMG_CENTRE
         self.IMG_DIMS = IMG_DIMS
-        self.img_dest_dim = (self.IMG_DIMS[0]*0.8, self.IMG_DIMS[1]*0.8)
+        self.img_dest_dim = (self.IMG_DIMS[0], self.IMG_DIMS[1])
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
 
     #Pos = Position in game world
@@ -69,6 +69,8 @@ class Clock():
 
 class Keyboard:
     def __init__(self):
+        self.any_input = False
+        self.last_key = 'w'
         self.left = False
         self.right = False
         self.space = False
@@ -76,19 +78,28 @@ class Keyboard:
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
             self.left = True
+            self.any_input = True
         if key == simplegui.KEY_MAP['d']:
             self.right = True
+            self.any_input = True
         if key == simplegui.KEY_MAP['space']:
             self.space = True
+            self.any_input = True
 
 
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:
             self.left = False
+            self.last_key = 'a'
         if key == simplegui.KEY_MAP['d']:
             self.right = False
+            self.last_key = 'd'
         if key == simplegui.KEY_MAP['space']:
             self.space = False
+            self.last_key = 'space'
+        else:
+            self.any_input = False
+            
 
 class Interaction:
     def __init__(self, player, keyboard):
@@ -100,13 +111,24 @@ class Interaction:
 
     def update(self):
         if self.keyboard.left:
-            self.player.sprite.IMG_CENTRE = (50,(329/6)*3)
+            self.player.sprite.IMG_CENTRE = ((610/12),(329/6)*3)
             self.player.velocity.add(Vector(-1, 0))
         if self.keyboard.right:
-            self.player.sprite.IMG_CENTRE = (150,(329/6)*5)
+            self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6)*5)
             self.player.velocity.add(Vector(1, 0))
         if self.keyboard.space:
+            self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
             self.player.velocity.add(Vector(0, -2))
+        if self.keyboard.any_input == False and self.keyboard.last_key == 'd':
+            self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
+        if self.keyboard.any_input == False and self.keyboard.last_key == 'a':
+            self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
+ 
+        if self.player.pos.y+70 <= 700 and self.keyboard.space == False:
+            self.player.velocity.add(Vector(0, 1))
+            
+            
+            
 
 def draw(canvas):
     canvas.draw_image(BACKDROP_SPRITE, 
@@ -124,7 +146,7 @@ def draw(canvas):
 SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
 #player sheet dimensions 610 x 329
 
-playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), (150, 329/6), (100, 100))
+playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
 kbd = Keyboard()
 clock = Clock()
