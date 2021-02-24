@@ -11,3 +11,12 @@ aiming and shooting
 jumping
 enemies
 
+
+
+animating sprites
+life system
+
+
+EXTRA STUFF (for once the basic stuff is done)
+Sounds
+
