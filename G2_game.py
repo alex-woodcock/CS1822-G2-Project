@@ -163,7 +163,7 @@ class Interaction:
             
 
 def draw(canvas):
-    ##temporary drawing of background, maybe add parallax
+    #temporary drawing of background, maybe add parallax
     canvas.draw_image(BACKDROP_SPRITE, 
                       (1280/2,720/2), 
                       (1280,720), 
