@@ -140,6 +140,7 @@ class Interaction:
         a = True
 
     def update(self):
+        ##need to animate walking animations
         if self.keyboard.left:
             self.player.sprite.IMG_CENTRE = ((610/12),(329/6)*3)
             self.player.velocity.add(Vector(-1, 0))
@@ -153,14 +154,16 @@ class Interaction:
             self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
         if self.keyboard.any_input == False and self.keyboard.last_key == 'a':
             self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
- 
+          
+        ##Jump mechanic needs fixing, dosent work with short presses and player falls too slow
         if self.player.pos.y+70 <= 700 and self.keyboard.space == False:
-            self.player.velocity.add(Vector(0, 1))
+            self.player.velocity.add(Vector(0,1))
             
             
             
 
 def draw(canvas):
+    ##temporary drawing of background, maybe add parallax
     canvas.draw_image(BACKDROP_SPRITE, 
                       (1280/2,720/2), 
                       (1280,720), 
@@ -178,7 +181,7 @@ def draw(canvas):
     
 #Defines a sprite!
 SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
-#player sheet dimensions 610 x 329
+##player sheet dimensions 610 x 329
 
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), (150, 329/6), (100, 100))
 ###NEED BULLET SPRITE PLS TY
