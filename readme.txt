@@ -11,3 +11,7 @@ aiming and shoot
 enemies
 animating sprites
 life system
+
+
+EXTRA STUFF (for once the basic stuff is done)
+Sounds
