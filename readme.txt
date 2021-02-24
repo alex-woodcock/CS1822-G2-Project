@@ -7,7 +7,7 @@ CONTROLS
 NEED TO DO LIST:
 BASIC MECHANICS
 platforms
-aiming and shoot
+aiming and shooting 
+jumping
 enemies
-animating sprites
-life system
+
