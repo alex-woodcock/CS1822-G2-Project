@@ -9,9 +9,9 @@ except ImportError:
     from pygame.math import Vector2 as Vector
 
 # The canvas dimensions
-CANVAS_DIMS = (1280, 720)
-CANVAS_WIDTH = 1280
-CANVAS_HEIGHT = 720
+CANVAS_DIMS = (854, 480)
+CANVAS_WIDTH = 854
+CANVAS_HEIGHT = 480
 
 #Background sprite
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png')
@@ -22,7 +22,7 @@ class Sprite:
         self.IMG = IMG
         self.IMG_CENTRE = IMG_CENTRE
         self.IMG_DIMS = IMG_DIMS
-        self.img_dest_dim = (self.IMG_DIMS[0], self.IMG_DIMS[1])
+        self.img_dest_dim = (self.IMG_DIMS[0]*0.7, self.IMG_DIMS[1]*0.7)
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
 
     #Pos = Position in game world
@@ -98,35 +98,36 @@ class Clock():
 class Keyboard:
     def __init__(self):
         self.any_input = False
-        self.last_key = 'w'
+        self.last_key = ''
         self.left = False
         self.right = False
         self.space = False
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
+            self.last_key = 'a'
             self.left = True
             self.any_input = True
         if key == simplegui.KEY_MAP['d']:
+            self.last_key = 'd'
             self.right = True
             self.any_input = True
         if key == simplegui.KEY_MAP['space']:
+            self.last_key = 'space'
             self.space = True
-            self.any_input = True
         if key == simplegui.KEY_MAP['f']:
             player.shoot()
+        else:
+            self.any_input = True
             
 
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:
             self.left = False
-            self.last_key = 'a'
         if key == simplegui.KEY_MAP['d']:
-            self.right = False
-            self.last_key = 'd'
+            self.right = False            
         if key == simplegui.KEY_MAP['space']:
             self.space = False
-            self.last_key = 'space'
         else:
             self.any_input = False
             
@@ -156,19 +157,19 @@ class Interaction:
             self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
           
         ##Jump mechanic needs fixing, dosent work with short presses and player falls too slow
-        if self.player.pos.y+70 <= 700 and self.keyboard.space == False:
+        if self.player.pos.y+70 <= 480 and self.keyboard.space == False:
             self.player.velocity.add(Vector(0,1))
             
             
             
 
 def draw(canvas):
-    #temporary drawing of background, maybe add parallax
+    ##temporary drawing of background, maybe add parallax
     canvas.draw_image(BACKDROP_SPRITE, 
                       (1280/2,720/2), 
                       (1280,720), 
-                      (1280/2,720/2), 
-                      (1280,720), 
+                      (854/2,480/2), 
+                      (854,480), 
                       0)
     inter.update()
     clock.tick()
@@ -192,7 +193,7 @@ playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(200, 650), 50, 10, 20)
+player = Player(playerSprite, Vector(100, 450), 50, 10, 20)
 inter = Interaction(player, kbd)
 
 bullets = []
