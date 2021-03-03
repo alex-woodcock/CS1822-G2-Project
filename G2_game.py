@@ -58,7 +58,6 @@ class Entity():
     def update(self):
         self.pos.add(self.velocity)
         self.velocity *= 0.85
-        
         if (self.health < 0):
             self.is_dead = True
     
@@ -86,6 +85,8 @@ class Enemy(Entity):
 
 class Zombie(Enemy):
     def update(self):
+        if self.health == 0:
+            self.is_dead = True
         if self.is_dead == False:
             self.pos.add(Vector(-0.1,0))
             if clock.transition(self.frame_duration):
@@ -93,13 +94,13 @@ class Zombie(Enemy):
                 if (img_centre_x + 101.6) > 508:
                     img_centre_x = 50.8            
                 self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
-"""
-#bullet hitting zombie not working
-        else:
-            for i in bullets:
-                if i.pos.x == self.pos.x:
-                    self.is_dead = True
-"""
+        if self.is_dead == True:
+            if clock.transition(self.frame_duration):
+                img_centre_x = self.sprite.IMG_CENTRE[0]
+                if img_centre_x != 614.6:
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
+                
+            
 
 
 #Extends Entity
@@ -253,7 +254,7 @@ kbd = Keyboard()
 clock = Clock()
 
 player = Player(playerSprite, Vector(100, 450), 50, 10, 20, 30, 3)
-zombie = Zombie(zombieSprite, Vector(700, 441), 50, 10, 20, 10, 2)
+zombie = Zombie(zombieSprite, Vector(700, 441), 50, 10, 20, 10, 10)
 inter = Interaction(player, kbd)
 
 #bullets = []
