@@ -1,4 +1,4 @@
-Zombie running
+Zombie sheet
 http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png
 
 Player sheet
@@ -6,3 +6,6 @@ http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png
 
 Background
 http://personal.rhul.ac.uk/zhac/315/backdrop.png
+
+Bullet
+http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png
