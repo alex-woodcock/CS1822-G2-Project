@@ -40,7 +40,7 @@ class Spritesheet(Sprite):
 
 ##All Entities have: An assigned sprite, Position, Radius (idk what that does), Movement speed, Jump height
 class Entity():
-    def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration):
+    def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, health):
         self.sprite = sprite      
         self.pos = pos
         self.radius = max(radius, 4)
@@ -49,6 +49,7 @@ class Entity():
         self.velocity = Vector(0,0)
         self.frame_duration = frame_duration
         self.is_dead = False
+        self.health = health
         
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
@@ -57,13 +58,33 @@ class Entity():
     def update(self):
         self.pos.add(self.velocity)
         self.velocity *= 0.85
+        
+        if (self.health < 0):
+            self.is_dead = True
+    
+        
 
 #Extends Entity
 class Player(Entity):
     def shoot(self):
-        bullets.append(Bullet())
-        
-class Zombie(Entity):
+        inter.bullets.append(Bullet())
+    
+    def hitByEnemy(self, enemy):
+        distance = self.pos.copy().subtract(enemy.pos).length()
+        if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
+            print("ive been hit")
+            self.health -= 1
+    
+##Creation of Enemy class as subclass of Entity should let us
+##add a "hit by bullet" function? Or maybe that should be entity as default
+class Enemy(Entity):
+    def hitByBullet(self, bullet):
+        distance = self.pos.copy().subtract(bullet.pos).length()
+        if (distance - bullet.radius <= self.radius and isinstance(bullet, Bullet)):
+            print("enemy who is me has been hit")
+            self.health -= 1
+
+class Zombie(Enemy):
     def update(self):
         if self.is_dead == False:
             self.pos.add(Vector(-0.1,0))
@@ -161,8 +182,31 @@ class Interaction:
         self.player = player
         self.keyboard = keyboard
         
+        self.entities = [zombie]
+        self.bullets = []
+        
     def draw(self, canvas):
-        a = True
+        ##temporary drawing of background, maybe add parallax
+        canvas.draw_image(BACKDROP_SPRITE, 
+                          (1280/2,720/2), 
+                          (1280,720), 
+                          (854/2,480/2), 
+                          (854,480), 
+                          0)
+        inter.update()
+        clock.tick()
+        player.draw(canvas)
+        for x in self.entities:
+            x.draw(canvas)
+        for i in self.bullets:
+            i.draw(canvas)
+        #player.update()
+        #player.draw(canvas)
+        #zombie.update()
+        #zombie.draw(canvas)
+    
+
+    
 
     def update(self):
         ##need to animate walking animations
@@ -183,29 +227,19 @@ class Interaction:
         if self.player.pos.y+70 <= 480 and self.keyboard.space == False:
             self.player.velocity.add(Vector(0,1))
         
+        player.update()
+        
+        for i in self.bullets:
+            i.update()
+        
+        
+        for x in self.entities:
+            x.update()
+            player.hitByEnemy(x)
+            if (isinstance(x, Enemy)):
+                for b in self.bullets:
+                    x.hitByBullet(b)
             
-            
-            
-
-def draw(canvas):
-    ##temporary drawing of background, maybe add parallax
-    canvas.draw_image(BACKDROP_SPRITE, 
-                      (1280/2,720/2), 
-                      (1280,720), 
-                      (854/2,480/2), 
-                      (854,480), 
-                      0)
-    inter.update()
-    clock.tick()
-    player.update()
-    player.draw(canvas)
-    zombie.update()
-    zombie.draw(canvas)
-    
-
-    for i in bullets:
-        i.update()
-        i.draw(canvas)
     
 #Defines a sprite!
 SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
@@ -218,18 +252,18 @@ playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(100, 450), 50, 10, 20, 30)
-zombie = Zombie(zombieSprite, Vector(700, 441), 50, 10, 20, 10)
+player = Player(playerSprite, Vector(100, 450), 50, 10, 20, 30, 3)
+zombie = Zombie(zombieSprite, Vector(700, 441), 50, 10, 20, 10, 2)
 inter = Interaction(player, kbd)
 
-bullets = []
+#bullets = []
 zombies = []
 
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("G2 game", CANVAS_WIDTH, CANVAS_HEIGHT)
 frame.set_canvas_background('#2C6A6A')
-frame.set_draw_handler(draw)
+frame.set_draw_handler(inter.draw)
 frame.set_keydown_handler(kbd.keyDown)
 frame.set_keyup_handler(kbd.keyUp)
 
