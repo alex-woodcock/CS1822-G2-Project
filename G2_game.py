@@ -14,7 +14,7 @@ CANVAS_WIDTH = 854
 CANVAS_HEIGHT = 480
 #Background sprite
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png')
-
+ 
 #Bullet sound
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
@@ -25,7 +25,7 @@ class Sprite:
         self.IMG = IMG
         self.IMG_CENTRE = IMG_CENTRE
         self.IMG_DIMS = IMG_DIMS
-        self.img_dest_dim = (self.IMG_DIMS[0]*0.75, self.IMG_DIMS[1]*0.75)
+        self.img_dest_dim = (self.IMG_DIMS[0]*0.50, self.IMG_DIMS[1]*0.50)
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
 
     #Pos = Position in game world
@@ -50,6 +50,7 @@ class Entity():
         self.frame_duration = frame_duration
         self.is_dead = False
         self.health = health
+        self.on_ground = True
         
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
@@ -126,6 +127,45 @@ class Bullet(Entity):
             #do damage
             #remove self from bullets list
 
+            
+           
+class Platform():
+    def __init__(self,colour):
+        if colour=="gray":
+            self.sprite = gray_rooftopSprite
+            self.pos = Vector(155,305)
+            self.ground_level = 407
+            self.left = 5
+            self.right = 340
+        elif colour=="green":
+            self.sprite = green_rooftopSprite
+            self.pos = Vector(550,305)
+            self.ground_level = 325
+            self.left = 400
+            self.right = 627
+        else:
+            self.sprite = red_rooftopSprite
+            self.pos = Vector(790,320)
+            self.ground_level = 370
+            self.left = 720
+            self.right = 810
+            
+    def draw(self,canvas):
+        self.sprite.draw(canvas,self.pos)
+    
+    def on_platform(self,player_pos):
+        if player_pos>=self.left and player_pos<=self.right:
+            #this means he's on the rooftop
+            return True
+        else:
+            #means he either jumped in a gap/so he's dead,or he's changed platforms
+            return False
+    
+            
+                        
+            
+  
+            
 class Clock():
     time = 0
 
@@ -156,6 +196,7 @@ class Keyboard:
             self.any_input = True
         if key == simplegui.KEY_MAP['space']:
             self.space = True
+            
         if key == simplegui.KEY_MAP['f']:
             player.shoot()
             bullet_sound.play()
@@ -171,20 +212,27 @@ class Keyboard:
             self.left = False
         if key == simplegui.KEY_MAP['d']:
             self.last_key = 'd'
-            self.right = False            
+            self.right = False
         if key == simplegui.KEY_MAP['space']:
-            self.space = False
+            self.last_key = 'space'
+            self.space = False    
         else:
             self.any_input = False
             
-
+            
+                     
 class Interaction:
-    def __init__(self, player, keyboard):
+    def __init__(self, player, keyboard, platform_list):
         self.player = player
         self.keyboard = keyboard
+        self.platform_list = platform_list
         
         self.entities = [zombie]
         self.bullets = []
+        
+        #this variable keeps track of which platform the player is moving  
+        #it gets initialised with 0 , cause the player starts from the first rooftop
+        self.pl = 0
         
     def draw(self, canvas):
         ##temporary drawing of background, maybe add parallax
@@ -196,7 +244,17 @@ class Interaction:
                           0)
         inter.update()
         clock.tick()
+        
+        i=0
+        while i<=2:
+            self.platform_list[i].draw(canvas)
+            i+=1
+            
+        #this lne is just for measuring it will be deleted later 
+        #canvas.draw_line((720, 370), (810, 370), 1, 'Red')
+        
         player.draw(canvas)
+        
         for x in self.entities:
             x.draw(canvas)
         for i in self.bullets:
@@ -217,22 +275,32 @@ class Interaction:
         if self.keyboard.right:
             self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6)*5)
             self.player.velocity.add(Vector(0.6, 0))
-        if self.keyboard.space:
+        if self.keyboard.space and self.player.on_ground:
             self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
-            self.player.velocity.add(Vector(0, -1.5))
+            self.player.on_ground = False
+            self.player.velocity.add(Vector(0, -5))
         if self.keyboard.any_input == False and self.keyboard.last_key == 'd':
             self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
         if self.keyboard.any_input == False and self.keyboard.last_key == 'a':
-            self.player.sprite.IMG_CENTRE = ((610/12),(329/6))          
+            self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
+        if self.player.on_ground == False:
+            self.player.velocity.add(Vector(0, 1))          
+        if self.player.pos.y+70 > 480:
+            self.player.on_ground = True
+            
+            
+        
+            
+        
         ##Jump mechanic needs fixing, dosent work with short presses and player falls too slow
-        if self.player.pos.y+70 <= 480 and self.keyboard.space == False:
-            self.player.velocity.add(Vector(0,1))
+        
+        
+        
         
         player.update()
         
         for i in self.bullets:
             i.update()
-        
         
         for x in self.entities:
             x.update()
@@ -240,6 +308,9 @@ class Interaction:
             if (isinstance(x, Enemy)):
                 for b in self.bullets:
                     x.hitByBullet(b)
+    
+
+    
             
     
 #Defines a sprite!
@@ -250,16 +321,32 @@ zombieSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (50, 50), (100, 100))
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
+
+gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
+green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/green_rooftop.png"),(754/2,754/2),(754,754))
+red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
+
+gray_rooftop = Platform("gray")
+green_rooftop = Platform("green")
+red_rooftop = Platform("red")
+
+platform_list = []						#creating a list to store the platforms
+platform_list.append(gray_rooftop)
+platform_list.append(green_rooftop)
+platform_list.append(red_rooftop)
+
+
+
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(100, 450), 50, 10, 20, 30, 3)
-zombie = Zombie(zombieSprite, Vector(700, 441), 50, 10, 20, 10, 10)
-inter = Interaction(player, kbd)
+player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 30, 3)
+zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 10, 10)
+
+inter = Interaction(player, kbd, platform_list)
 
 #bullets = []
 zombies = []
-
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("G2 game", CANVAS_WIDTH, CANVAS_HEIGHT)
