@@ -89,7 +89,7 @@ class Zombie(Enemy):
         if self.health == 0:
             self.is_dead = True
         if self.is_dead == False:
-            self.pos.add(Vector(-0.1,0))
+            self.pos.add(Vector(-0.05,0))
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
                 if (img_centre_x + 101.6) > 508:
@@ -98,8 +98,10 @@ class Zombie(Enemy):
         if self.is_dead == True:
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
-                if img_centre_x != 614.6:
+                if img_centre_x != 614.6 or img_centre_x > 614.6:
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
+             
+                    
                 
             
 
@@ -180,41 +182,37 @@ class Clock():
 class Keyboard:
     def __init__(self):
         self.any_input = False
-        self.last_key = ''
+        self.last_direction = 'd'
         self.left = False
         self.right = False
         self.space = False
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
-            self.last_key = 'a'
+            self.last_direction = 'a'
             self.left = True
             self.any_input = True
         if key == simplegui.KEY_MAP['d']:
-            self.last_key = 'd'
+            self.last_direction = 'd'
             self.right = True
             self.any_input = True
         if key == simplegui.KEY_MAP['space']:
             self.space = True
+            self.any_input = True
             
         if key == simplegui.KEY_MAP['f']:
             player.shoot()
             bullet_sound.play()
             bullet_sound.rewind()
             bullet_sound.play()
-        else:
-            self.any_input = True
             
 
     def keyUp(self, key):
-        if key == simplegui.KEY_MAP['a']:
-            self.last_key = 'a'
+        if key == simplegui.KEY_MAP['a']:     
             self.left = False
-        if key == simplegui.KEY_MAP['d']:
-            self.last_key = 'd'
+        if key == simplegui.KEY_MAP['d']:         
             self.right = False
         if key == simplegui.KEY_MAP['space']:
-            self.last_key = 'space'
             self.space = False    
         else:
             self.any_input = False
@@ -270,23 +268,36 @@ class Interaction:
     def update(self):
         ##need to animate walking animations
         if self.keyboard.left:
-            self.player.sprite.IMG_CENTRE = ((610/12),(329/6)*3)
-            self.player.velocity.add(Vector(-0.6, 0))
+            self.player.velocity.add(Vector(-0.3, 0))
+            if clock.transition(self.player.frame_duration):
+                img_centre_x = self.player.sprite.IMG_CENTRE[0]
+                if (img_centre_x + 101.6) > 610:
+                    img_centre_x = 50.8
+                self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)            
         if self.keyboard.right:
-            self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6)*5)
-            self.player.velocity.add(Vector(0.6, 0))
+            self.player.velocity.add(Vector(0.3, 0))
+            if clock.transition(self.player.frame_duration):
+                img_centre_x = self.player.sprite.IMG_CENTRE[0]
+                if (img_centre_x + 101.6) > 610:
+                    img_centre_x = 50.8
+                self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*5)
         if self.keyboard.space and self.player.on_ground:
-            self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
+            if self.keyboard.last_direction == 'a':
+                self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
+            if self.keyboard.last_direction == 'd':
+                self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
             self.player.on_ground = False
             self.player.velocity.add(Vector(0, -5))
-        if self.keyboard.any_input == False and self.keyboard.last_key == 'd':
+        if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
             self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
-        if self.keyboard.any_input == False and self.keyboard.last_key == 'a':
+        if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
             self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
         if self.player.on_ground == False:
             self.player.velocity.add(Vector(0, 1))          
         if self.player.pos.y+70 > 480:
             self.player.on_ground = True
+  
+
             
             
         
@@ -338,8 +349,8 @@ platform_list.append(red_rooftop)
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 30, 3)
-zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 10, 10)
+player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 5, 3)
+zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)
 
 inter = Interaction(player, kbd, platform_list)
 
