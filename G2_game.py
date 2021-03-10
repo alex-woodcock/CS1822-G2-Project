@@ -237,8 +237,8 @@ class Interaction:
     def draw(self, canvas):
         ##temporary drawing of background, maybe add parallax
         canvas.draw_image(BACKDROP_SPRITE, 
-                          (1280/2,720/2), 
-                          (1280,720), 
+                          (2130/2,1200/2), 
+                          (2130,1200), 
                           (854/2,480/2), 
                           (854,480), 
                           0)
@@ -313,13 +313,11 @@ class Interaction:
     
             
     
-#Defines a sprite!
-SHEET_URL = "http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"
-##player sheet dimensions 610 x 329
+#Defining sprites
 
 zombieSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))
 bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (50, 50), (100, 100))
-playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheet.png"), ((610/12)*3, 329/6), (610/6, 329/3))
+playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheetV2.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
 
 gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
