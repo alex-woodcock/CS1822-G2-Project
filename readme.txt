@@ -7,8 +7,8 @@ CONTROLS
 NEED TO DO LIST:
 BASIC MECHANICS
 platforms
-jumping - jump height will be fixed, player descends too slowly atm
-enemies - zombie will go towards player and not fall off platform
+jumping - jumping needs to be adjusted slightly for gameplay and include platform collision
+enemies - zombie will go back and forth on the platfrom and not fall off platform, flying enemies go back and forth in the air
 
 
 
@@ -22,12 +22,34 @@ Player must take only 1 attack (Invulnerability timers? seems like the way to go
 
 
 
-NEXT STAGE
-animating sprites
+NEXT TO DO LIST
 life system
+stage mechanic (spawn new enemies and platfroms when in the next stage)
+Reload mechanic for gun
+ammo pickup
+Start menu and next level
+
 
 
 
 EXTRA STUFF (for once the basic stuff is done)
 Sounds
+Boss enemies
+
+
+Errolson
+enemies
+stage mechanic
+start menu and next level
+
+Angelos
+platforms
+
+Alex Wu
+
+
+ALEX Woodcock
+direction shooting
+
+
 
