@@ -65,8 +65,6 @@ class Player(Entity):
     def shoot(self, coords):
         aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
         inter.bullets.append(Bullet(aimAt))
-        print("AIM AT")
-        print(aimAt)
     
     def hitByEnemy(self, enemy):
         distance = self.pos.copy().subtract(enemy.pos).length()
@@ -120,7 +118,6 @@ class Bullet(Entity):
     #Draw inhereted from Entity
     def update(self):
         self.pos.add(self.velocity)
-        print("I AM ALIVE")
         ##bullets dont slow down!
 
         ##If bullet touching thing, then do damage and stuff!
