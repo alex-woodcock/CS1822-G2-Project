@@ -62,8 +62,11 @@ class Entity():
             
 #Extends Entity
 class Player(Entity):
-    def shoot(self):
-        inter.bullets.append(Bullet())
+    def shoot(self, coords):
+        aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
+        inter.bullets.append(Bullet(aimAt))
+        print("AIM AT")
+        print(aimAt)
     
     def hitByEnemy(self, enemy):
         distance = self.pos.copy().subtract(enemy.pos).length()
@@ -103,16 +106,21 @@ class Zombie(Enemy):
 class Bullet(Entity):
     ##Presets variables instead of needing them custom set, because it knows its a bullet
     ##Maybe add custom variable to initialiser for damage, speed? For different guns?
-    def __init__(self):
+    def __init__(self, aimAt):
         self.sprite = bulletSprite
         ##Seems silly to do it like this, but direct referencing means shared position!
-        self.pos = Vector(player.pos.x+30, player.pos.y)
+        self.pos = Vector(player.pos.x, player.pos.y)
         self.radius = max(4, 4)
-
-        self.velocity = Vector(10, 0)
+        
+        aimAt.normalize();
+        #No cool 180 spinz :(
+        self.velocity = -aimAt*10
+        
+        
     #Draw inhereted from Entity
     def update(self):
         self.pos.add(self.velocity)
+        print("I AM ALIVE")
         ##bullets dont slow down!
 
         ##If bullet touching thing, then do damage and stuff!
@@ -187,11 +195,11 @@ class Keyboard:
             self.space = True
             self.any_input = True
             
-        if key == simplegui.KEY_MAP['f']:
-            player.shoot()
-            bullet_sound.play()
-            bullet_sound.rewind()
-            bullet_sound.play()
+        #if key == simplegui.KEY_MAP['f']:
+        #    player.shoot()
+        #    bullet_sound.play()
+        #    bullet_sound.rewind()
+        #    bullet_sound.play()
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -203,15 +211,29 @@ class Keyboard:
         else:
             self.any_input = False
             
-            
+
+class Mouse:
+    def __init__(self):
+        self.mouseClick = None
+    
+    def clickHandler(self, mouseClick):
+        self.mouseClick = mouseClick
+
+    def clickPos(self):
+        temp = self.mouseClick
+        self.mouseClick = None
+        return temp  
+      
 class Interaction:
-    def __init__(self, player, keyboard, platform_list):
+    def __init__(self, player, keyboard, platform_list, mouseObject):
         self.player = player
         self.keyboard = keyboard
         self.platform_list = platform_list
         
         self.entities = [zombie]
         self.bullets = []
+        
+        self.mouse = mouseObject
         
         #this variable keeps track of which platform the player is moving  
         #it gets initialised with 0 , cause the player starts from the first rooftop
@@ -253,6 +275,10 @@ class Interaction:
         #player.draw(canvas)
         #zombie.update()
         #zombie.draw(canvas)
+        
+        mouseReturn = self.mouse.clickPos()
+        if mouseReturn != None:
+            player.shoot(mouseReturn)
     
 
     def update(self):
@@ -340,7 +366,7 @@ clock = Clock()
 player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 5, 3)
 zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)
 
-inter = Interaction(player, kbd, platform_list)
+inter = Interaction(player, kbd, platform_list, Mouse())
 
 #bullets = []
 zombies = []
@@ -351,6 +377,6 @@ frame.set_canvas_background('#2C6A6A')
 frame.set_draw_handler(inter.draw)
 frame.set_keydown_handler(kbd.keyDown)
 frame.set_keyup_handler(kbd.keyUp)
-
+frame.set_mouseclick_handler(inter.mouse.clickHandler)
 # Start the frame animation
 frame.start()
