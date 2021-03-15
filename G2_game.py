@@ -85,7 +85,7 @@ class Enemy(Entity):
 #zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)      
 class Zombie(Enemy):
     def __init__(self, pos):
-        self.sprite = zombieSprite      
+        self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))     
         self.pos = pos
         self.radius = max(50, 4)
         self.speed = 10
