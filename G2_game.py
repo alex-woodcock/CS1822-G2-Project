@@ -80,9 +80,22 @@ class Enemy(Entity):
         if (distance - bullet.radius <= self.radius and isinstance(bullet, Bullet)):
             print("enemy who is me has been hit")
             self.health -= 1
+            bullet.toDelete = True
 
-            
+#zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)      
 class Zombie(Enemy):
+    def __init__(self, pos):
+        self.sprite = zombieSprite      
+        self.pos = pos
+        self.radius = max(50, 4)
+        self.speed = 10
+        self.jumpheight = 20
+        self.velocity = Vector(0,0)
+        self.frame_duration = 20
+        self.is_dead = False
+        self.health = 10
+        self.on_ground = True
+        
     def update(self):
         if self.health == 0:
             self.is_dead = True
@@ -99,7 +112,7 @@ class Zombie(Enemy):
                 if img_centre_x != 614.6 or img_centre_x > 614.6:
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
                     
-                    
+           
 #Extends Entity
 class Bullet(Entity):
     ##Presets variables instead of needing them custom set, because it knows its a bullet
@@ -114,17 +127,17 @@ class Bullet(Entity):
         #No cool 180 spinz :(
         self.velocity = -aimAt*10
         
+        self.toDelete = False
+        
         
     #Draw inhereted from Entity
     def update(self):
         self.pos.add(self.velocity)
-        ##bullets dont slow down!
-
-        ##If bullet touching thing, then do damage and stuff!
-        #if (touching thing):
-            #do damage
-            #remove self from bullets list
-            
+        
+        if self.toDelete == True:
+            self.pos = Vector (-1000, -1000)
+            self.velocity = self.velocity * 0
+        
             
 class Platform():
     def __init__(self,colour):
@@ -227,7 +240,8 @@ class Interaction:
         self.keyboard = keyboard
         self.platform_list = platform_list
         
-        self.entities = [zombie]
+        #self.entities = [Zombie(Vector(800, 347))]
+        self.entities = ExampleStageOne
         self.bullets = []
         
         self.mouse = mouseObject
@@ -337,6 +351,7 @@ class Interaction:
             if (isinstance(x, Enemy)):
                 for b in self.bullets:
                     x.hitByBullet(b)
+                    
         
 #Defining sprites
 zombieSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))
@@ -361,12 +376,10 @@ kbd = Keyboard()
 clock = Clock()
 
 player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 5, 3)
-zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)
+
+ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300))]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
-
-#bullets = []
-zombies = []
 
 # Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("G2 game", CANVAS_WIDTH, CANVAS_HEIGHT)
