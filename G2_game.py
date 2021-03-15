@@ -12,8 +12,9 @@ except ImportError:
 CANVAS_DIMS = (854, 480)
 CANVAS_WIDTH = 854
 CANVAS_HEIGHT = 480
-#Background sprite
+#Background sprites
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png') 
+STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/start_menu.png') 
 #Bullet sound
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
@@ -248,113 +249,134 @@ class Interaction:
         
         #this variable keeps track of which platform the player is moving  
         #it gets initialised with 0 , cause the player starts from the first rooftop
+        self.drawIsTrue = False
         self.pl = 0
-        self.stage = 0
+        self.stage = -1
         self.background_x = 854/2
         
     def draw(self, canvas):
-        canvas.draw_image(BACKDROP_SPRITE, 
-                          (2130/2,1200/2), 
-                          (2130,1200), 
-                          (self.background_x-10,480/2), 
-                          (854,480), 
-                          0)
-        canvas.draw_image(BACKDROP_SPRITE, 
-                          (2130/2,1200/2), 
-                          (2130,1200), 
-                          (self.background_x+844,480/2), 
-                          (854,480), 
-                          0)
+        if self.stage == -1:
+            canvas.draw_image(STARTMENU_SPRITE,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
+                              0)
+              
+        else:    
+            canvas.draw_image(BACKDROP_SPRITE, 
+                              (2130/2,1200/2), 
+                              (2130,1200), 
+                              (self.background_x-10,480/2), 
+                              (854,480), 
+                              0)
+            canvas.draw_image(BACKDROP_SPRITE, 
+                              (2130/2,1200/2), 
+                              (2130,1200), 
+                              (self.background_x+844,480/2), 
+                              (854,480), 
+                              0)
         inter.update()
         clock.tick()
         
-        i=0
-        while i<=2:
-            self.platform_list[i].draw(canvas)
-            i+=1
-            
-        #this lne is just for measuring it will be deleted later 
-        #canvas.draw_line((720, 370), (810, 370), 1, 'Red')
-        
-        player.draw(canvas)
-        
-        for x in self.entities:
-            x.draw(canvas)
-        for i in self.bullets:
-            i.draw(canvas)
-        #player.update()
-        #player.draw(canvas)
-        #zombie.update()
-        #zombie.draw(canvas)
-        
-        mouseReturn = self.mouse.clickPos()
-        if mouseReturn != None:
-            player.shoot(mouseReturn)
+        if self.drawIsTrue: 
+            i=0
+            while i<=2:
+                self.platform_list[i].draw(canvas)
+                i+=1
+
+            #this lne is just for measuring it will be deleted later 
+            #canvas.draw_line((720, 370), (810, 370), 1, 'Red')
+
+            player.draw(canvas)
+
+            for x in self.entities:
+                x.draw(canvas)
+            for i in self.bullets:
+                i.draw(canvas)
+            #player.update()
+            #player.draw(canvas)
+            #zombie.update()
+            #zombie.draw(canvas)
+
+
     
 
     def update(self):
-        if self.stage == 0:
-            if self.player.pos.x <= 0:
+        mouseReturn = self.mouse.clickPos()     
+        if self.stage == -1:
+            if mouseReturn != None:
+                self.drawIsTrue = True
+                self.stage = 0
+        else:
+            if self.stage == 0:
+                if self.player.pos.x <= 0:
+                    self.player.pos.x = 0
+            if self.stage != 0:
+                if self.player.pos.x <= 0:
+                    self.stage -= 1
+                    self.player.pos.x = 854
+            if self.player.pos.x > 854:
+                self.stage += 1
                 self.player.pos.x = 0
-        if self.stage != 0:
-            if self.player.pos.x <= 0:
-                self.stage -= 1
-                self.player.pos.x = 854
-        if self.player.pos.x > 854:
-            self.stage += 1
-            self.player.pos.x = 0
 
-               
-        if self.keyboard.left:
-            if self.stage == 0 and self.player.pos.x <= 0:
-                self.background_x += 0
-            else:
-                self.background_x += 0.05
-            self.player.velocity.add(Vector(-0.3, 0))
-            if clock.transition(self.player.frame_duration):
-                img_centre_x = self.player.sprite.IMG_CENTRE[0]
-                if (img_centre_x + 101.6) > 610:
-                            img_centre_x = 50.8
-                self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)            
-        if self.keyboard.right:
-            self.background_x -= 0.05
-            self.player.velocity.add(Vector(0.3, 0))
-            if clock.transition(self.player.frame_duration):
-                img_centre_x = self.player.sprite.IMG_CENTRE[0]
-                if (img_centre_x + 101.6) > 610:
-                    img_centre_x = 50.8
-                self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*5)
-        if self.keyboard.space and self.player.on_ground:
-            if self.keyboard.last_direction == 'a':
-                self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
-            if self.keyboard.last_direction == 'd':
-                self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
-            self.player.on_ground = False
-            self.player.velocity.add(Vector(0, -5))
-        if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
-            self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
-        if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
-            self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
-        if self.player.on_ground == False:
-            self.player.velocity.add(Vector(0, 1))
-        #Below code checks if player is on floor, should change for platform
-        if self.player.pos.y+70 > 480:
-            self.player.on_ground = True
-        player.update()
-        
-        for i in self.bullets:
-            i.update()
-        
-        for x in self.entities:
-            x.update()
-            player.hitByEnemy(x)
-            if (isinstance(x, Enemy)):
-                for b in self.bullets:
-                    x.hitByBullet(b)
-                    
+
+            if self.keyboard.left:
+                if self.stage == 0 and self.player.pos.x <= 0:
+                    self.background_x += 0
+                else:
+                    self.background_x += 0.05
+                self.player.velocity.add(Vector(-0.3, 0))
+                if clock.transition(self.player.frame_duration):
+                    img_centre_x = self.player.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 610:
+                                img_centre_x = 50.8
+                    self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)            
+            if self.keyboard.right:
+                self.background_x -= 0.05
+                self.player.velocity.add(Vector(0.3, 0))
+                if clock.transition(self.player.frame_duration):
+                    img_centre_x = self.player.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 610:
+                        img_centre_x = 50.8
+                    self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*5)
+            if self.keyboard.space and self.player.on_ground:
+                if self.keyboard.last_direction == 'a':
+                    self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
+                if self.keyboard.last_direction == 'd':
+                    self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
+                self.player.on_ground = False
+                self.player.velocity.add(Vector(0, -5))
+            if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
+                self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
+            if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
+                self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
+            if self.player.on_ground == False:
+                self.player.velocity.add(Vector(0, 1))
+            #Below code checks if player is on floor, should change for platform
+            if self.player.pos.y+70 > 480:
+                self.player.on_ground = True
+            player.update()
+            
+            if mouseReturn != None:
+                bullet_sound.play()
+                bullet_sound.rewind()
+                bullet_sound.play()
+                player.shoot(mouseReturn)   
+
+            for i in self.bullets:
+                i.update()
+
+            for x in self.entities:
+                x.update()
+                player.hitByEnemy(x)
+                if (isinstance(x, Enemy)):
+                    for b in self.bullets:
+                        x.hitByBullet(b)
+
         
 #Defining sprites
-bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (50, 50), (100, 100))
+bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (12.5, 12.5), (15, 15))
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheetV2.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
 ##USE FOR REFERENCE WHEN PROGRAMMING ONLY
