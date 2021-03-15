@@ -15,9 +15,14 @@ CANVAS_HEIGHT = 480
 #Background sprites
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png') 
 STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/start_menu.png') 
-#Bullet sound
+#sounds
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
+menu_music = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/menu_music.mp3')
+menu_music.set_volume(0.2)
+zombie_death = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/zombie_death.mp3')
+zombie_death.set_volume(0.2)
+
 
 ##For non-spritesheet based sprites
 class Sprite:
@@ -88,30 +93,32 @@ class Zombie(Enemy):
     def __init__(self, pos):
         self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))     
         self.pos = pos
-        self.radius = max(50, 4)
+        self.radius = max(25, 4)
         self.speed = 10
         self.jumpheight = 20
         self.velocity = Vector(0,0)
         self.frame_duration = 20
         self.is_dead = False
-        self.health = 10
+        self.health = 5
         self.on_ground = True
         
     def update(self):
-        if self.health == 0:
-            self.is_dead = True
-        if self.is_dead == False:
+        if self.health > 0:
             self.pos.add(Vector(-0.05,0))
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
                 if (img_centre_x + 101.6) > 508:
                     img_centre_x = 50.8            
                 self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
-        if self.is_dead == True:
+        if self.health <= 0:
+            zombie_death.play()
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
-                if img_centre_x != 614.6 or img_centre_x > 614.6:
+                if not img_centre_x+101.6 > 610:
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
+                else:
+                    self.is_dead = True
+
                     
            
 #Extends Entity
@@ -305,7 +312,9 @@ class Interaction:
     def update(self):
         mouseReturn = self.mouse.clickPos()     
         if self.stage == -1:
+            menu_music.play()
             if mouseReturn != None:
+                menu_music.rewind()
                 self.drawIsTrue = True
                 self.stage = 0
         else:
@@ -370,13 +379,15 @@ class Interaction:
             for x in self.entities:
                 x.update()
                 player.hitByEnemy(x)
+                if x.is_dead == True:
+                    self.entities.remove(x)
                 if (isinstance(x, Enemy)):
                     for b in self.bullets:
                         x.hitByBullet(b)
 
         
 #Defining sprites
-bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (12.5, 12.5), (15, 15))
+bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (12.5, 12.5), (25, 25))
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheetV2.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
 ##USE FOR REFERENCE WHEN PROGRAMMING ONLY
