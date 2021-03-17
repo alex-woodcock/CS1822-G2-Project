@@ -15,6 +15,7 @@ CANVAS_HEIGHT = 480
 #Background sprites
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png') 
 STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/start_menu.png') 
+STORY5_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story5.png') 
 #sounds
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
@@ -160,14 +161,6 @@ class Player(Entity):
                     ammo_left = 7-self.ammo
                     self.ammo_capacity -= ammo_left
                     self.ammo = 7
-
-
-
- 
-        
-        
-              
-            
     
 ##Creation of Enemy class as subclass of Entity should let us
 ##add a "hit by bullet" function? Or maybe that should be entity as default
@@ -374,20 +367,28 @@ class Interaction:
         #it gets initialised with 0 , cause the player starts from the first rooftop
         self.drawIsTrue = False
         self.pl = 0
-        self.stage = -1
+        self.stage = -2
         self.background_x = 854/2
         self.time_left = 120
         
     def draw(self, canvas):
-        if self.stage == -1:
+        if self.stage == -2:
             canvas.draw_image(STARTMENU_SPRITE,
                               (2556/2,1440/2),
                               (2556,1440),
                               (854/2,480/2),
                               (854,480),
                               0)
+        if self.stage == -1:
+            canvas.draw_image(STORY5_SPRITE,
+                              (2800/2,1577/2),
+                              (2800,1577),
+                              (854/2,480/2),
+                              (854,480),
+                              0)            
+            
               
-        else:    
+        if self.stage >= 0:    
             canvas.draw_image(BACKDROP_SPRITE, 
                               (2130/2,1200/2), 
                               (2130,1200), 
@@ -408,8 +409,7 @@ class Interaction:
             ammo = str(self.player.ammo)
             ammo_capacity = str(self.player.ammo_capacity)
             canvas.draw_text('Time left: '+ time_left, (20, 40), 40, 'Red')
-            canvas.draw_text(ammo, (20, 60), 20, 'Red')
-            canvas.draw_text(ammo_capacity, (20, 80), 20, 'Red')
+            canvas.draw_text('Ammo:'+ammo+'/'+ammo_capacity, (20, 60), 20, 'Red')
             
             if clock.transition(100):
                 self.time_left -= 1
@@ -441,13 +441,16 @@ class Interaction:
             self.stage = -1
             self.player.game_over = False
             self.player.lifes = 3
+            
         mouseReturn = self.mouse.clickPos()     
-        if self.stage == -1:
+        if self.stage < 0:
             menu_music.play()
             if mouseReturn != None:
-                menu_music.rewind()
-                self.drawIsTrue = True
-                self.stage = 0
+                self.stage += 1
+                if (self.stage) == 0:
+                    menu_music.rewind()
+                    self.drawIsTrue = True
+
         else:
             if self.stage == 0:
                 if self.player.pos.x <= 0:
