@@ -150,14 +150,14 @@ class Zombie(Enemy):
                     self.left_right = 'left'  
                     
             if self.left_right == 'left':
-                self.pos.add(Vector(-0.05,0))
+                self.pos.add(Vector(-0.05* self.speed/10,0) )
                 if clock.transition(self.frame_duration):
                     img_centre_x = self.sprite.IMG_CENTRE[0]
                     if (img_centre_x + 101.6) > 508:
                         img_centre_x = 50.8            
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
             if self.left_right == 'right':
-                self.pos.add(Vector(0.05,0))
+                self.pos.add(Vector(0.05* self.speed/10,0))
                 if clock.transition(self.frame_duration):
                     img_centre_x = self.sprite.IMG_CENTRE[0]
                     if (img_centre_x + 101.6) > 508:
@@ -172,7 +172,20 @@ class Zombie(Enemy):
                 else:
                     self.is_dead = True
 
-                    
+class BossZombie(Zombie):
+    def __init__(self, pos):
+        self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))  
+        self.sprite.img_dest_dim = (self.sprite.IMG_DIMS[0]*2.50, self.sprite.IMG_DIMS[1]*2.50)
+        self.pos = pos
+        self.radius = max(80, 4)
+        self.speed = 50
+        self.jumpheight = 20
+        self.velocity = Vector(0,0)
+        self.frame_duration = 20
+        self.is_dead = False
+        self.health = 20
+        self.on_ground = True
+        self.left_right = 'left'
            
 #Extends Entity
 class Bullet(Entity):
@@ -296,7 +309,7 @@ class Interaction:
         self.platform_list = platform_list
         
         #self.entities = [Zombie(Vector(800, 347))]
-        self.entities = ExampleStageOne
+        self.entities = stages[0]
         self.bullets = []
         
         self.mouse = mouseObject
@@ -378,7 +391,12 @@ class Interaction:
                     self.stage -= 1
                     self.player.pos.x = 854
             if self.player.pos.x > 854:
+                #Uses stage number to load from array of preset stages
+                print(self.stage)
                 self.stage += 1
+                if (self.stage > len(stages)):
+                    self.stage = len(stages)
+                self.entities = stages[self.stage]
                 self.player.pos.x = 0
 
 
@@ -461,7 +479,11 @@ clock = Clock()
 
 player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
+
 ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380))]
+ExampleStageTwo = [BossZombie(Vector(800, 347))]
+
+stages = [ExampleStageOne, ExampleStageTwo]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
