@@ -87,7 +87,9 @@ class Player(Entity):
         self.health = health
         self.on_ground = True
         self.ammo = 7
+        self.ammo_capacity = 21
         self.can_shoot = True
+        self.can_reload = True
         self.lifes = 3
         self.game_over = False
         
@@ -103,10 +105,6 @@ class Player(Entity):
             aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
             inter.bullets.append(Bullet(aimAt))
             self.ammo -= 1
-        if self.can_shoot == False:
-            #need to add timer when player cant shoot
-            gun_reload.play()
-            self.ammo = 7
     
     def hitByEnemy(self, enemy):
         distance = self.pos.copy().subtract(enemy.pos).length()
@@ -140,7 +138,33 @@ class Player(Entity):
             img_centre_x = self.sprite.IMG_CENTRE[0]
             if (img_centre_x + 101.6) > 610:
                 img_centre_x = 50.8
-            self.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)              
+            self.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)      
+    
+    def reload(self):
+        if self.ammo_capacity <= 0:
+            self.can_reload = False
+        if self.can_reload:
+            gun_reload.play()
+            if self.ammo == 0:
+                if self.ammo_capacity < 7:
+                    self.ammo = self.ammo_capacity
+                    self.ammo_capacity = 0
+                else:
+                    self.ammo_capacity -= 7
+                    self.ammo = 7
+            else:
+                if self.ammo_capacity < 7:
+                    self.ammo = self.ammo_capacity
+                    self.ammo_capacity = 0
+                else:
+                    ammo_left = 7-self.ammo
+                    self.ammo_capacity -= ammo_left
+                    self.ammo = 7
+
+
+
+ 
+        
         
               
             
@@ -294,6 +318,7 @@ class Keyboard:
         self.left = False
         self.right = False
         self.space = False
+        self.r = False
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
@@ -307,6 +332,8 @@ class Keyboard:
         if key == simplegui.KEY_MAP['space']:
             self.space = True
             self.any_input = True
+        if key == simplegui.KEY_MAP['r']:
+            player.reload()
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -314,7 +341,7 @@ class Keyboard:
         if key == simplegui.KEY_MAP['d']:         
             self.right = False
         if key == simplegui.KEY_MAP['space']:
-            self.space = False    
+            self.space = False
         else:
             self.any_input = False
             
@@ -378,7 +405,12 @@ class Interaction:
         
         if self.drawIsTrue:
             time_left = str(self.time_left)
+            ammo = str(self.player.ammo)
+            ammo_capacity = str(self.player.ammo_capacity)
             canvas.draw_text('Time left: '+ time_left, (20, 40), 40, 'Red')
+            canvas.draw_text(ammo, (20, 60), 20, 'Red')
+            canvas.draw_text(ammo_capacity, (20, 80), 20, 'Red')
+            
             if clock.transition(100):
                 self.time_left -= 1
             i=0
@@ -444,6 +476,11 @@ class Interaction:
             if self.keyboard.right:
                 self.background_x -= 0.05
                 self.player.run_right()
+                
+            if self.keyboard.r:
+                self.player.reload()
+                
+                
 
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
