@@ -24,6 +24,8 @@ menu_music = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/menu_musi
 menu_music.set_volume(0.5)
 zombie_death = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/zombie_death.mp3')
 zombie_death.set_volume(0.5)
+player_hit = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/player_hit.mp3')
+player_hit.set_volume(0.5)
 
 
 ##For non-spritesheet based sprites
@@ -97,6 +99,9 @@ class Player(Entity):
         distance = self.pos.copy().subtract(enemy.pos).length()
         if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
             print("ive been hit")
+            player_hit.play()
+            player_hit.rewind()
+            player_hit.play()
             self.health -= 1
         #need to add invulnerability
         if self.health <= 0:
