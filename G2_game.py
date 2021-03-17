@@ -124,6 +124,8 @@ class Player(Entity):
                 self.pos = Vector(115, 380)
                 #temporary health
                 self.health = 10
+                self.ammo = 7
+                self.ammo_capacity = 21
                 
     def run_right(self):
         self.velocity.add(Vector(0.3, 0))
@@ -467,6 +469,8 @@ class Interaction:
                     self.stage = len(stages)
                 self.entities = stages[self.stage]
                 self.player.pos.x = 0
+                self.player.ammo = 7
+                self.player.ammo_capacity = 21
 
 
             if self.keyboard.left:
