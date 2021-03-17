@@ -60,11 +60,8 @@ class Entity():
         self.health = health
         self.on_ground = True
         
-        #not sure how to make below exclusive to player
         self.ammo = 7
         self.can_shoot = True
-        self.lifes = 3
-        self.game_over = False
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
         self.sprite.draw(canvas, self.pos)
@@ -78,6 +75,22 @@ class Entity():
             
 #Extends Entity
 class Player(Entity):
+def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, health):
+        self.sprite = sprite      
+        self.pos = pos
+        self.radius = max(radius, 4)
+        self.speed = speed
+        self.jumpheight = jumpheight
+        self.velocity = Vector(0,0)
+        self.frame_duration = frame_duration
+        self.is_dead = False
+        self.health = health
+        self.on_ground = True
+        
+        self.ammo = 7
+        self.can_shoot = True
+        self.lifes = 3
+        self.game_over = False
     def shoot(self, coords):
         if self.ammo > 0:
             self.can_shoot = True
