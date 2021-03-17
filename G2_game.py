@@ -18,10 +18,12 @@ STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/sta
 #sounds
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
+gun_reload = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/gun_reload.mp3')
+gun_reload.set_volume(0.5)
 menu_music = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/menu_music.mp3')
-menu_music.set_volume(0.2)
+menu_music.set_volume(0.5)
 zombie_death = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/zombie_death.mp3')
-zombie_death.set_volume(0.2)
+zombie_death.set_volume(0.5)
 
 
 ##For non-spritesheet based sprites
@@ -54,7 +56,13 @@ class Entity():
         self.frame_duration = frame_duration
         self.is_dead = False
         self.health = health
-        self.on_ground = True        
+        self.on_ground = True
+        
+        #not sure how to make below exclusive to player
+        self.ammo = 7
+        self.can_shoot = True
+        self.lifes = 3
+        self.game_over = False
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
         self.sprite.draw(canvas, self.pos)
@@ -69,14 +77,39 @@ class Entity():
 #Extends Entity
 class Player(Entity):
     def shoot(self, coords):
-        aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
-        inter.bullets.append(Bullet(aimAt))
+        if self.ammo > 0:
+            self.can_shoot = True
+        if self.ammo == 0:
+            self.can_shoot = False
+        if self.can_shoot == True:
+            bullet_sound.play()
+            bullet_sound.rewind()
+            bullet_sound.play()
+            aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
+            inter.bullets.append(Bullet(aimAt))
+            self.ammo -= 1
+        if self.can_shoot == False:
+            #need to add timer when player cant shoot
+            gun_reload.play()
+            self.ammo = 7
     
     def hitByEnemy(self, enemy):
         distance = self.pos.copy().subtract(enemy.pos).length()
         if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
             print("ive been hit")
             self.health -= 1
+        #need to add invulnerability
+        if self.health <= 0:
+            if self.lifes == 0:
+                self.game_over = True
+            else:
+                self.lifes -= 1
+                self.pos = Vector(115, 380)
+                #temporary health
+                self.health = 10
+                
+            
+            
     
 ##Creation of Enemy class as subclass of Entity should let us
 ##add a "hit by bullet" function? Or maybe that should be entity as default
@@ -101,15 +134,30 @@ class Zombie(Enemy):
         self.is_dead = False
         self.health = 5
         self.on_ground = True
+        self.left_right = 'left'
         
     def update(self):
         if self.health > 0:
-            self.pos.add(Vector(-0.05,0))
-            if clock.transition(self.frame_duration):
-                img_centre_x = self.sprite.IMG_CENTRE[0]
-                if (img_centre_x + 101.6) > 508:
-                    img_centre_x = 50.8            
-                self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
+            if clock.transition(self.frame_duration*5):  
+                if self.left_right == 'left':
+                    self.left_right = 'right'
+                if self.left_right == 'right':
+                    self.left_right = 'left'  
+                    
+            if self.left_right == 'left':
+                self.pos.add(Vector(-0.05,0))
+                if clock.transition(self.frame_duration):
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 508:
+                        img_centre_x = 50.8            
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
+            if self.left_right == 'right':
+                self.pos.add(Vector(0.05,0))
+                if clock.transition(self.frame_duration):
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 508:
+                        img_centre_x = 50.8            
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*5)                                
         if self.health <= 0:
             zombie_death.play()
             if clock.transition(self.frame_duration):
@@ -133,7 +181,7 @@ class Bullet(Entity):
         
         aimAt.normalize();
         #No cool 180 spinz :(
-        self.velocity = -aimAt*10
+        self.velocity = -aimAt*20
         
         self.toDelete = False
         
@@ -212,12 +260,6 @@ class Keyboard:
         if key == simplegui.KEY_MAP['space']:
             self.space = True
             self.any_input = True
-            
-        #if key == simplegui.KEY_MAP['f']:
-        #    player.shoot()
-        #    bullet_sound.play()
-        #    bullet_sound.rewind()
-        #    bullet_sound.play()
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -310,6 +352,11 @@ class Interaction:
     
 
     def update(self):
+        if self.player.game_over:
+            self.drawIsTrue = False
+            self.stage = -1
+            self.player.game_over = False
+            self.player.lifes = 3
         mouseReturn = self.mouse.clickPos()     
         if self.stage == -1:
             menu_music.play()
@@ -368,9 +415,6 @@ class Interaction:
             player.update()
             
             if mouseReturn != None:
-                bullet_sound.play()
-                bullet_sound.rewind()
-                bullet_sound.play()
                 player.shoot(mouseReturn)   
 
             for i in self.bullets:
@@ -410,9 +454,9 @@ platform_list.append(red_rooftop)
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(115, 380), 50, 10, 20, 5, 3)
+player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
-ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300))]
+ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380))]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
