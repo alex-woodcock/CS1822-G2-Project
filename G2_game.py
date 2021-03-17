@@ -75,7 +75,7 @@ class Entity():
             
 #Extends Entity
 class Player(Entity):
-def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, health):
+    def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, health):
         self.sprite = sprite      
         self.pos = pos
         self.radius = max(radius, 4)
@@ -86,11 +86,11 @@ def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, healt
         self.is_dead = False
         self.health = health
         self.on_ground = True
-        
         self.ammo = 7
         self.can_shoot = True
         self.lifes = 3
         self.game_over = False
+        
     def shoot(self, coords):
         if self.ammo > 0:
             self.can_shoot = True
@@ -349,6 +349,7 @@ class Interaction:
         self.pl = 0
         self.stage = -1
         self.background_x = 854/2
+        self.time_left = 120
         
     def draw(self, canvas):
         if self.stage == -1:
@@ -375,7 +376,11 @@ class Interaction:
         inter.update()
         clock.tick()
         
-        if self.drawIsTrue: 
+        if self.drawIsTrue:
+            time_left = str(self.time_left)
+            canvas.draw_text('Time left: '+ time_left, (20, 40), 40, 'Red')
+            if clock.transition(100):
+                self.time_left -= 1
             i=0
             while i<=2:
                 self.platform_list[i].draw(canvas)
@@ -437,6 +442,7 @@ class Interaction:
                     self.player.run_left()
          
             if self.keyboard.right:
+                self.background_x -= 0.05
                 self.player.run_right()
 
             if self.keyboard.space and self.player.on_ground:
