@@ -113,7 +113,23 @@ class Player(Entity):
                 #temporary health
                 self.health = 10
                 
-            
+    def run_right(self):
+        self.velocity.add(Vector(0.3, 0))
+        if clock.transition(self.frame_duration):
+            img_centre_x = self.sprite.IMG_CENTRE[0]
+            if (img_centre_x + 101.6) > 610:
+                img_centre_x = 50.8
+            self.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*5)   
+    
+    def run_left(self):
+        self.velocity.add(Vector(-0.3, 0))
+        if clock.transition(self.frame_duration):
+            img_centre_x = self.sprite.IMG_CENTRE[0]
+            if (img_centre_x + 101.6) > 610:
+                img_centre_x = 50.8
+            self.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)              
+        
+              
             
     
 ##Creation of Enemy class as subclass of Entity should let us
@@ -405,20 +421,11 @@ class Interaction:
                     self.background_x += 0
                 else:
                     self.background_x += 0.05
-                self.player.velocity.add(Vector(-0.3, 0))
-                if clock.transition(self.player.frame_duration):
-                    img_centre_x = self.player.sprite.IMG_CENTRE[0]
-                    if (img_centre_x + 101.6) > 610:
-                                img_centre_x = 50.8
-                    self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*3)            
+                    self.player.run_left()
+         
             if self.keyboard.right:
-                self.background_x -= 0.05
-                self.player.velocity.add(Vector(0.3, 0))
-                if clock.transition(self.player.frame_duration):
-                    img_centre_x = self.player.sprite.IMG_CENTRE[0]
-                    if (img_centre_x + 101.6) > 610:
-                        img_centre_x = 50.8
-                    self.player.sprite.IMG_CENTRE = (img_centre_x+101.6,(329/6)*5)
+                self.player.run_right()
+
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
                     self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
