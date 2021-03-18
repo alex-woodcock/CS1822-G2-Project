@@ -267,31 +267,45 @@ class Bullet(Entity):
         
             
 class Platform():
-    def __init__(self,colour):
-        if colour=="gray":
-            self.sprite = gray_rooftopSprite
-            self.pos = Vector(155,305)
-            self.ground_level = 407
-            self.left = 5
-            self.right = 340
-        elif colour=="green":
-            self.sprite = green_rooftopSprite
-            self.pos = Vector(550,305)
-            self.ground_level = 325
-            self.left = 400
-            self.right = 627
-        else:
-            self.sprite = red_rooftopSprite
-            self.pos = Vector(790,320)
-            self.ground_level = 370
-            self.left = 720
-            self.right = 810
+    def __init__(self, pos, width):
+        self.pos = pos
+        self.width = width
+        #if colour=="gray":
+        #    self.sprite = gray_rooftopSprite
+        #    self.pos = pos
+        #    self.ground_level = 407
+        #    self.left = 5
+        #    self.right = 340
+        #elif colour=="green":
+        #    self.sprite = green_rooftopSprite
+        #    self.pos = Vector(550,305)
+        #    self.ground_level = 325
+        #    self.left = 400
+        #    self.right = 627
+        #else:
+        #    self.sprite = red_rooftopSprite
+        #    self.pos = Vector(790,320)
+        #    self.ground_level = 370
+        #    self.left = 720
+        #    self.right = 810
             
     def draw(self,canvas):
         self.sprite.draw(canvas,self.pos)
     
-    def on_platform(self,player_pos):
-        if player_pos>=self.left and player_pos<=self.right:
+    def update(self, playerPos):
+    #this means he's on the rooftop
+        print("twst")
+        if (playerPos.x >= self.pos.x+self.width/2 and playerPos.x <= self.pos.x-self.width/2):
+            #Is the player physically touching the ground?
+            if (playerPos.y - self.pos.y >= -2 and playerPos.y - self.pos.y <= -2):
+                #True means standing and not falling
+                print("STANDIN")
+                return True
+        return False
+    
+    #This is used in update, changed name to make it compatible with the Interaction code
+    def on_platform(self, player_pos):
+        if player_pos.x>=self.left and player_pos.x<=self.right:
             #this means he's on the rooftop
             return True
         else:
@@ -362,10 +376,11 @@ class Interaction:
     def __init__(self, player, keyboard, platform_list, mouseObject):
         self.player = player
         self.keyboard = keyboard
-        self.platform_list = platform_list
+        #self.platform_list = platform_list
         
         #self.entities = [Zombie(Vector(800, 347))]
         self.entities = stages[0]
+        self.platforms = [Platform(Vector(100, 400), 1000), Platform(Vector(100, 450), 1000)]
         self.bullets = []
         
         self.mouse = mouseObject
@@ -422,10 +437,10 @@ class Interaction:
             
             if clock.transition(100):
                 self.time_left -= 1
-            i=0
-            while i<=2:
-                self.platform_list[i].draw(canvas)
-                i+=1
+            #i=0
+            #while i<=2:
+            #    self.platform_list[i].draw(canvas)
+            #    i+=1
 
             #this lne is just for measuring it will be deleted later 
             #canvas.draw_line((720, 370), (810, 370), 1, 'Red')
@@ -509,11 +524,16 @@ class Interaction:
                 self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
             if self.player.on_ground == False:
                 self.player.velocity.add(Vector(0, 1))
-            #Below code checks if player is on floor, should change for platform
-            if self.player.pos.y+70 > 480:
-                self.player.on_ground = True
-            player.update()
+            ##Below code checks if player is on floor, should change for platform
+            #if self.player.pos.y+70 > 480:
+            #    self.player.on_ground = True
+            #player.update()
             
+            self.playerOnGround = False
+            for x in self.platforms:
+                if (x.update(player.pos) == True):
+                    self.playerOnGround = True
+            player.update()
             
             if mouseReturn != None:
                 if self.shoot_timer <= 0:
@@ -546,20 +566,20 @@ gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zja
 green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/green_rooftop.png"),(754/2,754/2),(754,754))
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
 
-gray_rooftop = Platform("gray")
-green_rooftop = Platform("green")
-red_rooftop = Platform("red")
+#gray_rooftop = Platform("gray")
+#green_rooftop = Platform("green")
+#red_rooftop = Platform("red")
 
 #creating a list to store the platforms
 platform_list = []
-platform_list.append(gray_rooftop)
-platform_list.append(green_rooftop)
-platform_list.append(red_rooftop)
+#platform_list.append(gray_rooftop)
+#platform_list.append(green_rooftop)
+#platform_list.append(red_rooftop)
 
 kbd = Keyboard()
 clock = Clock()
 
-player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
+player = Player(playerSprite, Vector(115, 0), 25, 10, 20, 5, 3)
 
 
 ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380))]
