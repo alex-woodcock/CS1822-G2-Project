@@ -149,20 +149,23 @@ class Player(Entity):
         if self.can_reload:
             gun_reload.play()
             if self.ammo == 0:
-                if self.ammo_capacity < 7:
+                if self.ammo_capacity <= 7:
                     self.ammo = self.ammo_capacity
                     self.ammo_capacity = 0
                 else:
                     self.ammo_capacity -= 7
                     self.ammo = 7
             else:
-                if self.ammo_capacity < 7:
-                    self.ammo = self.ammo_capacity
+                ammo_used = 7-self.ammo
+                if self.ammo_capacity - ammo_used < 0:
+                    self.ammo += self.ammo_capacity
                     self.ammo_capacity = 0
                 else:
-                    ammo_left = 7-self.ammo
-                    self.ammo_capacity -= ammo_left
+                    self.ammo_capacity -= ammo_used
                     self.ammo = 7
+                
+
+
     
 ##Creation of Enemy class as subclass of Entity should let us
 ##add a "hit by bullet" function? Or maybe that should be entity as default
@@ -373,6 +376,8 @@ class Interaction:
         self.background_x = 854/2
         self.time_left = 120
         
+        self.shoot_timer = 0
+        
     def draw(self, canvas):
         if self.stage == -2:
             canvas.draw_image(STARTMENU_SPRITE,
@@ -507,8 +512,13 @@ class Interaction:
                 self.player.on_ground = True
             player.update()
             
+            
             if mouseReturn != None:
-                player.shoot(mouseReturn)   
+                if self.shoot_timer <= 0:
+                    player.shoot(mouseReturn)
+                    self.shoot_timer = 25
+            if self.shoot_timer > 0:
+                self.shoot_timer -= 1
 
             for i in self.bullets:
                 i.update()
