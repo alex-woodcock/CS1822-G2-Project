@@ -148,6 +148,8 @@ class Player(Entity):
             self.can_reload = False
         if self.can_reload:
             gun_reload.play()
+            ##Shoot timer handled by Interaction instead of player?
+            inter.shoot_timer=60
             if self.ammo == 0:
                 if self.ammo_capacity <= 7:
                     self.ammo = self.ammo_capacity
