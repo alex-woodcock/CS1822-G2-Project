@@ -165,9 +165,6 @@ class Player(Entity):
                 else:
                     self.ammo_capacity -= ammo_used
                     self.ammo = 7
-                
-
-
     
 ##Creation of Enemy class as subclass of Entity should let us
 ##add a "hit by bullet" function? Or maybe that should be entity as default
@@ -271,19 +268,20 @@ class Platform():
         if colour=="gray":
             self.sprite = gray_rooftopSprite
             self.pos = Vector(155,305)
-            self.ground_level = 407
+            self.ground_level = 380
             self.left = 5
             self.right = 340
+            self.normal = Vector(1,0)
         elif colour=="green":
             self.sprite = green_rooftopSprite
             self.pos = Vector(550,305)
-            self.ground_level = 325
+            self.ground_level = 300
             self.left = 400
             self.right = 627
         else:
             self.sprite = red_rooftopSprite
             self.pos = Vector(790,320)
-            self.ground_level = 370
+            self.ground_level = 345
             self.left = 720
             self.right = 810
             
@@ -363,7 +361,7 @@ class Interaction:
         self.player = player
         self.keyboard = keyboard
         self.platform_list = platform_list
-        
+        self.pl = 0
         #self.entities = [Zombie(Vector(800, 347))]
         self.entities = stages[0]
         self.bullets = []
@@ -417,8 +415,10 @@ class Interaction:
             time_left = str(self.time_left)
             ammo = str(self.player.ammo)
             ammo_capacity = str(self.player.ammo_capacity)
+            lives = str(self.player.lifes)
             canvas.draw_text('Time left: '+ time_left, (20, 40), 40, 'Red')
             canvas.draw_text('Ammo:'+ammo+'/'+ammo_capacity, (20, 60), 20, 'Red')
+            canvas.draw_text('Lives: ' + lives, (20,100), 40,'Red')
             
             if clock.transition(100):
                 self.time_left -= 1
@@ -442,6 +442,12 @@ class Interaction:
             #zombie.draw(canvas)
 
 
+    def player_fell(self):
+        self.player.lifes -= 1
+        self.player.pos = Vector(115, 380)
+        self.pl = "Gray"
+        if self.player.lifes == 0:
+            self.player.game_over = True
     
 
     def update(self):
@@ -450,6 +456,7 @@ class Interaction:
             self.stage = -1
             self.player.game_over = False
             self.player.lifes = 3
+            
             
         mouseReturn = self.mouse.clickPos()     
         if self.stage < 0:
@@ -495,25 +502,49 @@ class Interaction:
                 self.player.reload()
                 
                 
-
+            if self.player.pos.x > gray_rooftop.right and self.player.pos.x < green_rooftop.left:
+                self.player.on_ground = False
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
                     self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
                 if self.keyboard.last_direction == 'd':
                     self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
                 self.player.on_ground = False
-                self.player.velocity.add(Vector(0, -5))
+                self.player.velocity.add(Vector(0, -20))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
                 self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
                 self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
             if self.player.on_ground == False:
-                self.player.velocity.add(Vector(0, 1))
-            #Below code checks if player is on floor, should change for platform
-            if self.player.pos.y+70 > 480:
+                self.player.velocity.add(Vector(0, 0.75))
+                
+            if self.player.pos.x >= gray_rooftop.left and self.player.pos.x <= gray_rooftop.right:
+                self.pl = "Gray"    
+            if self.player.pos.x >= green_rooftop.left and self.player.pos.x <= green_rooftop.right:
+                self.pl = "Green"
+            if self.player.pos.x >= red_rooftop.left and self.player.pos.x <= red_rooftop.right:
+                self.pl = "Red"    
+            if self.player.pos.y >= gray_rooftop.ground_level and self.player.pos.x >= gray_rooftop.left and self.player.pos.x <= gray_rooftop.right and self.pl == "Gray":
+                self.player.pos.y = gray_rooftop.ground_level
                 self.player.on_ground = True
-            player.update()
+            if self.player.pos.y >= green_rooftop.ground_level and self.player.pos.x >= green_rooftop.left and self.player.pos.x <= green_rooftop.right and self.pl == "Green":
+                self.player.pos.y = green_rooftop.ground_level
+                self.player.on_ground = True
+            if self.player.pos.y >= red_rooftop.ground_level and self.player.pos.x >= red_rooftop.left and self.player.pos.x <= red_rooftop.right and self.pl == "Red":
+                self.player.pos.y = red_rooftop.ground_level
+                self.player.on_ground = True        
+          
+                 
+                    
             
+            #Below code checks if player is on floor, should change for platform
+
+            if self.player.pos.y >= 480:
+                self.player_fell() 
+
+            if self.player.pos.x > green_rooftop.right and self.player.pos.x < red_rooftop.left:
+                self.player.on_ground = False
+            player.update()
             
             if mouseReturn != None:
                 if self.shoot_timer <= 0:
