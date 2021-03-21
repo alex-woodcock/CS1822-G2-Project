@@ -27,6 +27,8 @@ zombie_death = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/zombie_
 zombie_death.set_volume(0.5)
 player_hit = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/player_hit.mp3')
 player_hit.set_volume(0.5)
+locked_door = simplegui.load_sound('http://personal.rhul.ac.uk/zjac/379/locked_door.mp3')
+locked_door.set_volume(0.5)
 
 
 ##For non-spritesheet based sprites
@@ -317,6 +319,8 @@ class Keyboard:
         self.right = False
         self.space = False
         self.r = False
+        self.o = False
+        self.flag = True
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
@@ -332,6 +336,11 @@ class Keyboard:
             self.any_input = True
         if key == simplegui.KEY_MAP['r']:
             player.reload()
+        if key == simplegui.KEY_MAP['o']:
+            self.o= True
+            if self.flag == True: #used boolean flag because I needed to control the sound
+                locked_door.play()
+                self.flag= False
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -343,6 +352,7 @@ class Keyboard:
         else:
             self.any_input = False
             
+       
 
 class Mouse:
     def __init__(self):
@@ -408,8 +418,10 @@ class Interaction:
                               (self.background_x+844,480/2), 
                               (854,480), 
                               0)
+            
         inter.update()
         clock.tick()
+       
         
         if self.drawIsTrue:
             time_left = str(self.time_left)
@@ -428,10 +440,24 @@ class Interaction:
                 i+=1
 
             #this lne is just for measuring it will be deleted later 
-            #canvas.draw_line((720, 370), (810, 370), 1, 'Red')
+            #canvas.draw_line((190, 405), (230, 405), 1, 'Red')
 
             player.draw(canvas)
-
+            
+            
+            #code for the doors
+            if self.player.pos.x >=190 and self.player.pos.x<=230: 
+                #third argument decides which door it is
+                self.give_info(canvas,"Press 'O' to open the door",1)
+                if self.keyboard.o == True:
+                    self.give_info(canvas,"    This door is locked!",1)
+                    
+                
+                    
+            
+            
+                    
+                    
             for x in self.entities:
                 x.draw(canvas)
             for i in self.bullets:
@@ -440,7 +466,20 @@ class Interaction:
             #player.draw(canvas)
             #zombie.update()
             #zombie.draw(canvas)
+    
+    def give_info(self,canvas,info,door):
+        
+        if door==1:
+            canvas.draw_line((235, 322),  (340, 322), 15, 'white')
 
+            canvas.draw_line((235, 315), (340, 315), 1, 'black')
+            canvas.draw_line((235, 330), (340, 330), 1, 'black')
+            canvas.draw_line((235, 315), (235, 330), 1, 'black')
+            canvas.draw_line((340, 315), (340, 330), 1, 'black')
+
+            canvas.draw_text(info, (240, 325), 9, 'black')
+        
+            
 
     def player_fell(self):
         self.player.lifes -= 1
@@ -483,6 +522,7 @@ class Interaction:
                     self.stage = len(stages)
                 self.entities = stages[self.stage]
                 self.player.pos.x = 0
+                self.player.pos.y = 380
                 self.player.ammo = 7
                 self.player.ammo_capacity = 21
 
@@ -535,7 +575,7 @@ class Interaction:
                 self.player.on_ground = True        
           
                  
-                    
+            
             
             #Below code checks if player is on floor, should change for platform
 
@@ -573,8 +613,8 @@ playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 ##USE FOR REFERENCE WHEN PROGRAMMING ONLY
 #zombieSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))
 
-gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
-green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/green_rooftop.png"),(754/2,754/2),(754,754))
+gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
+green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_green_rooftop.png"),(754/2,754/2),(754,754))
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
 
 gray_rooftop = Platform("gray")
@@ -586,6 +626,8 @@ platform_list = []
 platform_list.append(gray_rooftop)
 platform_list.append(green_rooftop)
 platform_list.append(red_rooftop)
+
+
 
 kbd = Keyboard()
 clock = Clock()
