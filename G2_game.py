@@ -660,11 +660,11 @@ class Interaction:
                 if self.stage == 0 and self.player.pos.x <= 0:
                     self.background_x += 0
                 else:
-                    self.background_x += 0.05
+                    self.background_x += 0.02
                     self.player.run_left()
          
             if self.keyboard.right:
-                self.background_x -= 0.05
+                self.background_x -= 0.02
                 self.player.run_right()
                 
             if self.keyboard.r:
@@ -673,13 +673,15 @@ class Interaction:
                 
             if self.player.pos.x > gray_rooftop.right and self.player.pos.x < green_rooftop.left:
                 self.player.on_ground = False
+            
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
                     self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
+                    self.player.velocity.add(Vector(-3, -15))
                 if self.keyboard.last_direction == 'd':
                     self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
+                    self.player.velocity.add(Vector(3, -15))
                 self.player.on_ground = False
-                self.player.velocity.add(Vector(0, -15))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
                 self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
@@ -709,6 +711,9 @@ class Interaction:
             #Below code checks if player is on floor, should change for platform
 
             if self.player.pos.y >= 480:
+                player_hit.play()
+                player_hit.rewind()
+                player_hit.play()
                 self.player_fell() 
 
             if self.player.pos.x > green_rooftop.right and self.player.pos.x < red_rooftop.left:
