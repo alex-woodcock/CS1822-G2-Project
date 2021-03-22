@@ -14,8 +14,13 @@ CANVAS_WIDTH = 854
 CANVAS_HEIGHT = 480
 #Background sprites
 BACKDROP_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/backdrop.png') 
-STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/start_menu.png') 
-STORY5_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story5.png') 
+STARTMENU_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/start_menu.png')
+STORY1_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story1.png') 
+STORY2_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story2.png') 
+STORY3_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story3.png') 
+STORY4_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story4.png') 
+STORY5_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story5.png')
+GAME_OVER = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/game_over.png') 
 #sounds
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
 bullet_sound.set_volume(0.5)
@@ -195,10 +200,10 @@ class Zombie(Enemy):
         
     def update(self):
         if self.health > 0:
-            if clock.transition(self.frame_duration*5):  
+            if clock.transition(self.frame_duration*50):  
                 if self.left_right == 'left':
                     self.left_right = 'right'
-                if self.left_right == 'right':
+                else:
                     self.left_right = 'left'  
                     
             if self.left_right == 'left':
@@ -223,7 +228,61 @@ class Zombie(Enemy):
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
                 else:
                     self.is_dead = True
+                    
+class FlyingZombie(Zombie):
+    def __init__(self, pos):
+        self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/flying_zombie.png"), (51, 55*3), (100, 100))
+        self.sprite.img_dest_dim = (self.sprite.IMG_DIMS[0]*0.6, self.sprite.IMG_DIMS[1]*0.6)
+        self.pos = pos
+        self.radius = max(25, 4)
+        self.speed = 10
+        self.velocity = Vector(0,0)
+        self.frame_duration = 20
+        self.is_dead = False
+        self.health = 5
+        self.left_right = 'left'
+        
+    def update(self):
+        #add zombie shooting here
+        if self.health > 0:
+            if clock.transition(self.frame_duration*15):  
+                if self.left_right == 'left':
+                    self.left_right = 'right'
+                else:
+                    self.left_right = 'left'
+            if self.left_right == 'left':
+                self.pos.add(Vector(-0.5* self.speed/10,0) )
+                if clock.transition(self.frame_duration):
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 100) > 250:
+                        img_centre_x = 50            
+                    self.sprite.IMG_CENTRE = (img_centre_x+100,50)               
+                
+            if self.left_right == 'right':
+                self.pos.add(Vector(0.5* self.speed/10,0))
+                if clock.transition(self.frame_duration):
+                    img_centre_x = 450
+                    if (img_centre_x + 100) > 650:
+                        img_centre_x = 450            
+                    self.sprite.IMG_CENTRE = (img_centre_x+100,150)                        
+        if self.health <= 0:
+            zombie_death.play()
+            self.pos.add(Vector(0,5))
+            if clock.transition(self.frame_duration):
+                img_centre_x = self.sprite.IMG_CENTRE[0]
+                if not img_centre_x+100 > 600:
+                    self.sprite.IMG_CENTRE = (img_centre_x+100,50)
+                else:
+                    self.is_dead = True
+                    
 
+                    
+
+        
+        
+        
+        
+        
 class BossZombie(Zombie):
     def __init__(self, pos):
         self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))  
@@ -238,6 +297,31 @@ class BossZombie(Zombie):
         self.health = 20
         self.on_ground = True
         self.left_right = 'left'
+        
+    def update(self):
+        if self.health > 0:                      
+            if self.left_right == 'left':
+                self.pos.add(Vector(-0.05* self.speed/10,0) )
+                if clock.transition(self.frame_duration):
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 508:
+                        img_centre_x = 50.8            
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*3)
+            if self.left_right == 'right':
+                self.pos.add(Vector(0.05* self.speed/10,0))
+                if clock.transition(self.frame_duration):
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 101.6) > 508:
+                        img_centre_x = 50.8            
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*5)                                
+        if self.health <= 0:
+            zombie_death.play()
+            if clock.transition(self.frame_duration):
+                img_centre_x = self.sprite.IMG_CENTRE[0]
+                if not img_centre_x+101.6 > 610:
+                    self.sprite.IMG_CENTRE = (img_centre_x+101.6,55)
+                else:
+                    self.is_dead = True        
            
 #Extends Entity
 class Bullet(Entity):
@@ -382,20 +466,61 @@ class Interaction:
         #it gets initialised with 0 , cause the player starts from the first rooftop
         self.drawIsTrue = False
         self.pl = 0
-        self.stage = -2
+        self.stage = -6
         self.background_x = 854/2
         self.time_left = 120
         
         self.shoot_timer = 0
         
     def draw(self, canvas):
-        if self.stage == -2:
+        if self.stage == -7:
+            canvas.draw_image(GAME_OVER,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
+                              0)             
+            
+        if self.stage == -6:
             canvas.draw_image(STARTMENU_SPRITE,
                               (2556/2,1440/2),
                               (2556,1440),
                               (854/2,480/2),
                               (854,480),
+                              0)            
+               
+        if self.stage == -5:
+            canvas.draw_image(STORY1_SPRITE,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
                               0)
+            
+        if self.stage == -4:
+            canvas.draw_image(STORY2_SPRITE,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
+                              0)
+            
+        if self.stage == -3:
+            canvas.draw_image(STORY3_SPRITE,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
+                              0)
+            
+        if self.stage == -2:
+            canvas.draw_image(STORY4_SPRITE,
+                              (2130/2,1200/2),
+                              (2130,1200),
+                              (854/2,480/2),
+                              (854,480),
+                              0)
+            
         if self.stage == -1:
             canvas.draw_image(STORY5_SPRITE,
                               (2800/2,1577/2),
@@ -492,7 +617,7 @@ class Interaction:
     def update(self):
         if self.player.game_over:
             self.drawIsTrue = False
-            self.stage = -1
+            self.stage = -7
             self.player.game_over = False
             self.player.lifes = 3
             
@@ -501,10 +626,13 @@ class Interaction:
         if self.stage < 0:
             menu_music.play()
             if mouseReturn != None:
-                self.stage += 1
-                if (self.stage) == 0:
-                    menu_music.rewind()
-                    self.drawIsTrue = True
+                if self.stage == -7:
+                    self.stage = -1
+                else:    
+                    self.stage += 1
+                    if (self.stage) == 0:
+                        menu_music.rewind()
+                        self.drawIsTrue = True
 
         else:
             if self.stage == 0:
@@ -551,7 +679,7 @@ class Interaction:
                 if self.keyboard.last_direction == 'd':
                     self.player.sprite.IMG_CENTRE = ((610/12)*7,(329/6))
                 self.player.on_ground = False
-                self.player.velocity.add(Vector(0, -20))
+                self.player.velocity.add(Vector(0, -15))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'd':
                 self.player.sprite.IMG_CENTRE = ((610/12)*3,(329/6))
             if self.keyboard.any_input == False and self.keyboard.last_direction == 'a':
@@ -600,7 +728,7 @@ class Interaction:
             for x in self.entities:
                 x.update()
                 if(x.health>0):
-                    player.hitByEnemy(x)
+                        player.hitByEnemy(x)
                 if x.is_dead == True:
                     self.entities.remove(x)
                 if (isinstance(x, Enemy)):
@@ -637,7 +765,7 @@ clock = Clock()
 player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 
-ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380))]
+ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
 ExampleStageTwo = [BossZombie(Vector(800, 347))]
 VictoryScreen = []
 
