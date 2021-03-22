@@ -516,10 +516,11 @@ class Interaction:
                     self.player.pos.x = 854
             if self.player.pos.x > 854:
                 #Uses stage number to load from array of preset stages
-                print(self.stage)
+                
                 self.stage += 1
-                if (self.stage > len(stages)):
+                if (self.stage >= len(stages)):
                     self.stage = len(stages)
+                print(self.stage)
                 self.entities = stages[self.stage]
                 self.player.pos.x = 0
                 self.player.pos.y = 380
@@ -598,7 +599,8 @@ class Interaction:
 
             for x in self.entities:
                 x.update()
-                player.hitByEnemy(x)
+                if(x.health>0):
+                    player.hitByEnemy(x)
                 if x.is_dead == True:
                     self.entities.remove(x)
                 if (isinstance(x, Enemy)):
@@ -637,8 +639,9 @@ player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380))]
 ExampleStageTwo = [BossZombie(Vector(800, 347))]
+VictoryScreen = []
 
-stages = [ExampleStageOne, ExampleStageTwo]
+stages = [ExampleStageOne, ExampleStageTwo, VictoryScreen]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
