@@ -814,10 +814,12 @@ player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 
 EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
-EnemiesStageTwo = [BossZombie(Vector(810, 400))]
+BossStage = [BossZombie(Vector(810, 400))]
+EnemiesStageTwo = [Zombie(Vector(500, 300)), Zombie(Vector(550, 300)), Zombie(Vector(600, 300)), Zombie(Vector(340, 380))];
+EnemiesStageThree = [Zombie(Vector(750, 347)), Zombie(Vector(800, 347)), Zombie(Vector(550, 300)), Zombie(Vector(600, 300))];
 VictoryScreen = []
 
-stages = [EnemiesStageOne, EnemiesStageTwo, VictoryScreen]
+stages = [EnemiesStageOne, EnemiesStageTwo, BossStage, VictoryScreen]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
