@@ -34,6 +34,8 @@ player_hit = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/player_hi
 player_hit.set_volume(0.5)
 locked_door = simplegui.load_sound('http://personal.rhul.ac.uk/zjac/379/locked_door.mp3')
 locked_door.set_volume(0.5)
+door_opening = simplegui.load_sound('http://personal.rhul.ac.uk/zjac/379/door_opening.mp3')
+door_opening.set_volume(0.5)
 
 
 ##For non-spritesheet based sprites
@@ -189,18 +191,20 @@ class Zombie(Enemy):
         self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))     
         self.pos = pos
         self.radius = max(25, 4)
-        self.speed = 10
+        self.speed = 100
         self.jumpheight = 20
         self.velocity = Vector(0,0)
         self.frame_duration = 20
         self.is_dead = False
         self.health = 5
-        self.on_ground = True
+        self.rotate = True
         self.left_right = 'left'
+        self.current_platform = ''
         
     def update(self):
+
         if self.health > 0:
-            if clock.transition(self.frame_duration*50):  
+            if self.rotate == False:
                 if self.left_right == 'left':
                     self.left_right = 'right'
                 else:
@@ -241,6 +245,8 @@ class FlyingZombie(Zombie):
         self.is_dead = False
         self.health = 5
         self.left_right = 'left'
+        self.current_platform = ''
+        
         
     def update(self):
         #add zombie shooting here
@@ -286,9 +292,9 @@ class FlyingZombie(Zombie):
 class BossZombie(Zombie):
     def __init__(self, pos):
         self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))  
-        self.sprite.img_dest_dim = (self.sprite.IMG_DIMS[0]*2.50, self.sprite.IMG_DIMS[1]*2.50)
+        self.sprite.img_dest_dim = (self.sprite.IMG_DIMS[0]*5, self.sprite.IMG_DIMS[1]*5)
         self.pos = pos
-        self.radius = max(80, 4)
+        self.radius = max(200, 4)
         self.speed = 50
         self.jumpheight = 20
         self.velocity = Vector(0,0)
@@ -350,23 +356,25 @@ class Bullet(Entity):
         
             
 class Platform():
-    def __init__(self,colour):
+    def __init__(self,colour,pos):
         if colour=="gray":
             self.sprite = gray_rooftopSprite
-            self.pos = Vector(155,305)
+            self.pos = pos 
             self.ground_level = 380
-            self.left = 5
+            self.left = 0
             self.right = 340
             self.normal = Vector(1,0)
+            
         elif colour=="green":
             self.sprite = green_rooftopSprite
-            self.pos = Vector(550,305)
+            self.pos = pos 
             self.ground_level = 300
             self.left = 400
             self.right = 627
-        else:
+            
+        elif colour =="red":
             self.sprite = red_rooftopSprite
-            self.pos = Vector(790,320)
+            self.pos = pos 
             self.ground_level = 345
             self.left = 720
             self.right = 810
@@ -374,13 +382,8 @@ class Platform():
     def draw(self,canvas):
         self.sprite.draw(canvas,self.pos)
     
-    def on_platform(self,player_pos):
-        if player_pos>=self.left and player_pos<=self.right:
-            #this means he's on the rooftop
-            return True
-        else:
-            #means he either jumped in a gap/so he's dead,or he's changed platforms
-            return False
+    def __repr__(self):
+            return str("This is platform" + str(self.ground_level))        
         
         
 class Clock():
@@ -404,7 +407,11 @@ class Keyboard:
         self.space = False
         self.r = False
         self.o = False
-        self.flag = True
+        self.flag = False #controls the sound of the fisrt door
+        self.flag2=False #controls the sound of the second door
+        self.flag3 = False	#controls message for the first door
+        self.flag4 = False #controls message for the second door
+        self.flag5 = False #makes sure flag4 can only be true if player stands in front of the second door
 
     def keyDown(self, key):
         if key == simplegui.KEY_MAP['a']:
@@ -422,9 +429,13 @@ class Keyboard:
             player.reload()
         if key == simplegui.KEY_MAP['o']:
             self.o= True
-            if self.flag == True: #used boolean flag because I needed to control the sound
+            if self.flag == True: 
                 locked_door.play()
-                self.flag= False
+                self.flag= False 
+            if self.flag2==True :
+                door_opening.play()
+                self.flag2==False
+              
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -436,7 +447,11 @@ class Keyboard:
         else:
             self.any_input = False
             
-       
+        if key == simplegui.KEY_MAP['o']:
+            self.flag3 = True
+            if self.flag5==True:
+                self.flag4 = True
+            self.o= False
 
 class Mouse:
     def __init__(self):
@@ -456,6 +471,7 @@ class Interaction:
         self.keyboard = keyboard
         self.platform_list = platform_list
         self.pl = 0
+        self.current_platform = ''
         #self.entities = [Zombie(Vector(800, 347))]
         self.entities = stages[0]
         self.bullets = []
@@ -469,6 +485,8 @@ class Interaction:
         self.stage = -6
         self.background_x = 854/2
         self.time_left = 120
+        
+        self.open = False #checks if door is open
         
         self.shoot_timer = 0
         
@@ -544,8 +562,19 @@ class Interaction:
                               (854,480), 
                               0)
             
+        #if self.stage == 1:
+            #new_platform_list = []
+            #new_platform_list.append(Platform("red",Vector(155,320)))
+            #self.platform_list = new_platform_list
+            
+            
         inter.update()
         clock.tick()
+        
+        
+        if (self.player.pos.x>805) and (self.open==False):
+            self.player.pos.x = 805
+            
        
         
         if self.drawIsTrue:
@@ -559,27 +588,35 @@ class Interaction:
             
             if clock.transition(100):
                 self.time_left -= 1
-            i=0
-            while i<=2:
-                self.platform_list[i].draw(canvas)
-                i+=1
+          
+            for platform in self.platform_list:
+                platform.draw(canvas)
+               
 
             #this lne is just for measuring it will be deleted later 
-            #canvas.draw_line((190, 405), (230, 405), 1, 'Red')
+            canvas.draw_line((805, 270), (820, 270), 1, 'Red')
 
             player.draw(canvas)
             
             
-            #code for the doors
+        #code for the doors
             if self.player.pos.x >=190 and self.player.pos.x<=230: 
+                self.keyboard.flag=True
                 #third argument decides which door it is
                 self.give_info(canvas,"Press 'O' to open the door",1)
-                if self.keyboard.o == True:
+                if self.keyboard.flag3 == True:
                     self.give_info(canvas,"    This door is locked!",1)
+                    self.keyboard.flag3==False
                     
                 
-                    
-            
+            if self.player.pos.x>=740:
+                self.keyboard.flag5 = True
+                self.keyboard.flag2=True
+                self.give_info(canvas,"Press 'O' to open the door",2)
+                if self.keyboard.flag4==True:
+                    self.open  = True
+                    self.give_info(canvas,"  The door is now open!",2)
+                    self.keyboard.flag4==False
             
                     
                     
@@ -587,11 +624,8 @@ class Interaction:
                 x.draw(canvas)
             for i in self.bullets:
                 i.draw(canvas)
-            #player.update()
-            #player.draw(canvas)
-            #zombie.update()
-            #zombie.draw(canvas)
     
+    #code for displaying info boxes
     def give_info(self,canvas,info,door):
         
         if door==1:
@@ -603,7 +637,15 @@ class Interaction:
             canvas.draw_line((340, 315), (340, 330), 1, 'black')
 
             canvas.draw_text(info, (240, 325), 9, 'black')
-        
+        else:
+            canvas.draw_line((700, 263),  (805, 263), 15, 'white')
+
+            canvas.draw_line((700, 270), (805, 270), 1, 'black')
+            canvas.draw_line((700, 255), (805, 255), 1, 'black')
+            canvas.draw_line((700, 255), (700, 270), 1, 'black')
+            canvas.draw_line((805, 255), (805, 270), 1, 'black')
+            
+            canvas.draw_text(info, (705, 265), 9, 'black')
             
 
     def player_fell(self):
@@ -671,8 +713,7 @@ class Interaction:
                 self.player.reload()
                 
                 
-            if self.player.pos.x > gray_rooftop.right and self.player.pos.x < green_rooftop.left:
-                self.player.on_ground = False
+           
             
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
@@ -688,22 +729,17 @@ class Interaction:
                 self.player.sprite.IMG_CENTRE = ((610/12),(329/6))
             if self.player.on_ground == False:
                 self.player.velocity.add(Vector(0, 0.75))
-                
-            if self.player.pos.x >= gray_rooftop.left and self.player.pos.x <= gray_rooftop.right:
-                self.pl = "Gray"    
-            if self.player.pos.x >= green_rooftop.left and self.player.pos.x <= green_rooftop.right:
-                self.pl = "Green"
-            if self.player.pos.x >= red_rooftop.left and self.player.pos.x <= red_rooftop.right:
-                self.pl = "Red"    
-            if self.player.pos.y >= gray_rooftop.ground_level and self.player.pos.x >= gray_rooftop.left and self.player.pos.x <= gray_rooftop.right and self.pl == "Gray":
-                self.player.pos.y = gray_rooftop.ground_level
-                self.player.on_ground = True
-            if self.player.pos.y >= green_rooftop.ground_level and self.player.pos.x >= green_rooftop.left and self.player.pos.x <= green_rooftop.right and self.pl == "Green":
-                self.player.pos.y = green_rooftop.ground_level
-                self.player.on_ground = True
-            if self.player.pos.y >= red_rooftop.ground_level and self.player.pos.x >= red_rooftop.left and self.player.pos.x <= red_rooftop.right and self.pl == "Red":
-                self.player.pos.y = red_rooftop.ground_level
-                self.player.on_ground = True        
+            
+            
+            for platform in self.platform_list:
+                if self.player.pos.y >= platform.ground_level and self.player.pos.x >= platform.left and self.player.pos.x <= platform.right:
+                    self.player.pos.y = platform.ground_level
+                    self.player.on_ground = True
+                    self.current_platform = platform
+                   
+            if self.player.pos.x > self.current_platform.right or self.player.pos.x < self.current_platform.left:
+                self.player.on_ground = False
+                 
           
                  
             
@@ -716,8 +752,7 @@ class Interaction:
                 player_hit.play()
                 self.player_fell() 
 
-            if self.player.pos.x > green_rooftop.right and self.player.pos.x < red_rooftop.left:
-                self.player.on_ground = False
+            
             player.update()
             
             if mouseReturn != None:
@@ -729,7 +764,8 @@ class Interaction:
 
             for i in self.bullets:
                 i.update()
-
+                
+            #enemies
             for x in self.entities:
                 x.update()
                 if(x.health>0):
@@ -739,6 +775,16 @@ class Interaction:
                 if (isinstance(x, Enemy)):
                     for b in self.bullets:
                         x.hitByBullet(b)
+                if isinstance(x,BossZombie) == False:       
+                    for platform in self.platform_list:
+                        if x.pos.y >= platform.ground_level and x.pos.x >= platform.left and x.pos.x <= platform.right:
+                            x.pos.y = platform.ground_level
+                            x.rotate = True
+                            x.current_platform = platform
+                        if x.current_platform != '':
+                            if x.pos.x > x.current_platform.right or x.pos.x < x.current_platform.left:
+                                x.rotate = False
+
 
         
 #Defining sprites
@@ -751,16 +797,13 @@ playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
 green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_green_rooftop.png"),(754/2,754/2),(754,754))
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
-
-gray_rooftop = Platform("gray")
-green_rooftop = Platform("green")
-red_rooftop = Platform("red")
+ 
 
 #creating a list to store the platforms
 platform_list = []
-platform_list.append(gray_rooftop)
-platform_list.append(green_rooftop)
-platform_list.append(red_rooftop)
+platform_list.append(Platform("gray",Vector(155,305)))
+platform_list.append(Platform("green",Vector(550,305)))
+platform_list.append(Platform("red",Vector(790,320)))
 
 
 
@@ -770,11 +813,11 @@ clock = Clock()
 player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 
-ExampleStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
-ExampleStageTwo = [BossZombie(Vector(800, 347))]
+EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
+EnemiesStageTwo = [BossZombie(Vector(810, 400))]
 VictoryScreen = []
 
-stages = [ExampleStageOne, ExampleStageTwo, VictoryScreen]
+stages = [EnemiesStageOne, EnemiesStageTwo, VictoryScreen]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
