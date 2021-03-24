@@ -377,7 +377,7 @@ class Platform():
             self.pos = pos 
             self.ground_level = 345
             self.left = 720
-            self.right = 810
+            self.right = 854
             
     def draw(self,canvas):
         self.sprite.draw(canvas,self.pos)
