@@ -127,7 +127,7 @@ class Player(Entity):
                 self.health -= 1
             #need to add invulnerability
             if self.health <= 0:
-                if self.lifes == 0:
+                if self.lifes <= 0:
                     self.game_over = True
                 else:
                     self.lifes -= 1
@@ -624,6 +624,9 @@ class Interaction:
           
             for platform in self.platform_list: 
                 platform.draw(canvas)
+                
+            if self.player.can_get_hit == False:
+                canvas.draw_text('YOU ARE INVULNERABLE', (150, 240), 40, 'Red')
                
             player.draw(canvas)
             
@@ -697,6 +700,7 @@ class Interaction:
             self.player.game_over = False
             self.player.lifes = 3
             self.did_die = True
+            self.time_left = 120
             
             
         mouseReturn = self.mouse.clickPos()     
@@ -707,6 +711,7 @@ class Interaction:
                     if self.stage == -7:
                         self.stage = -1
                     if self.stage + 1 == 0:
+                        menu_music.rewind()
                         self.stage = self.previous_stage
                         self.drawIsTrue = True
                 else:    
@@ -786,10 +791,12 @@ class Interaction:
                 player_hit.play()
                 self.player_fell()
                 
-             
+            global timer
             if self.player.can_get_hit == False:
-                if clock.transition(250):
+                timer += 1
+                if timer == 120:
                     self.player.can_get_hit = True
+                    timer = 0
                 
             player.update()
             
@@ -851,7 +858,7 @@ platform_list.append(Platform("gray",Vector(155,305)))
 platform_list.append(Platform("green",Vector(550,305)))
 platform_list.append(Platform("red",Vector(790,320)))
 
-
+timer = 0
 
 kbd = Keyboard()
 clock = Clock()
