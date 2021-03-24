@@ -69,9 +69,6 @@ class Entity():
         self.is_dead = False
         self.health = health
         self.on_ground = True
-        
-        self.ammo = 7
-        self.can_shoot = True
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
         self.sprite.draw(canvas, self.pos)
@@ -98,7 +95,6 @@ class Player(Entity):
         self.on_ground = True
         self.ammo = 7
         self.ammo_capacity = 21
-        self.can_shoot = True
         self.can_reload = True
         self.lifes = 3
         self.game_over = False
@@ -106,10 +102,6 @@ class Player(Entity):
         
     def shoot(self, coords):
         if self.ammo > 0:
-            self.can_shoot = True
-        if self.ammo == 0:
-            self.can_shoot = False
-        if self.can_shoot == True:
             bullet_sound.play()
             bullet_sound.rewind()
             bullet_sound.play()
