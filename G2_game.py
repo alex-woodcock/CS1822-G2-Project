@@ -120,7 +120,7 @@ class Player(Entity):
     def hitByEnemy(self, enemy):
         if self.can_get_hit:
             distance = self.pos.copy().subtract(enemy.pos).length()
-            if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
+            if (distance - enemy.radius <= self.radius and (isinstance(enemy, Enemy) or isinstance(enemy, Bullet))):
                 player_hit.play()
                 player_hit.rewind()
                 player_hit.play()
