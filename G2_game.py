@@ -196,14 +196,12 @@ class Zombie(Enemy):
         self.current_platform = ''
         
     def update(self):
-
         if self.health > 0:
             if self.rotate == False:
                 if self.left_right == 'left':
                     self.left_right = 'right'
                 else:
                     self.left_right = 'left'  
-                    
             if self.left_right == 'left':
                 self.pos.add(Vector(-0.05* self.speed/10,0) )
                 if clock.transition(self.frame_duration):
@@ -218,7 +216,7 @@ class Zombie(Enemy):
                     if (img_centre_x + 101.6) > 508:
                         img_centre_x = 50.8            
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*5)                                
-        if self.health <= 0:
+        else:
             zombie_death.play()
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
@@ -250,10 +248,8 @@ class FlyingZombie(Zombie):
             bullet_sound.play()
             aimAt = Vector(self.pos.x - player.pos.x, self.pos.y - player.pos.y)
             bul = Bullet(aimAt,Vector(self.pos.x,self.pos.y), True) # creating the bullet on it own
-            #bul.zombie_bullet = True
             inter.bullets.append(bul)
             
-        
         if self.health > 0:
             if clock.transition(self.frame_duration*15):  
                 if self.left_right == 'left':
@@ -334,7 +330,6 @@ class Bullet(Entity):
     ##Maybe add custom variable to initialiser for damage, speed? For different guns?
     def __init__(self, aimAt, pos, zombie):
         self.sprite = bulletSprite
-        ##Seems silly to do it like this, but direct referencing means shared position!
         self.pos = pos
         self.radius = max(4, 4)
         self.zombie_bullet = zombie #determines whether the bullet comes from the player
@@ -404,9 +399,6 @@ class OtherPlatform():
                             'black',
                             self.fill_colour)
         
-        
-        
-        
 class Clock():
     time = 0
 
@@ -455,8 +447,7 @@ class Keyboard:
                 self.flag= False 
             if self.flag2==True :
                 door_opening.play()
-                self.flag2==False
-              
+                self.flag2==False        
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -493,7 +484,6 @@ class Interaction:
         self.platform_list = platform_list
         
         self.current_platform = ''
-        #self.entities = [Zombie(Vector(800, 347))]
         self.entities = stages[0]
         self.bullets = []
         
@@ -605,7 +595,6 @@ class Interaction:
             new_platform_list.append(OtherPlatform('grey',400,0,200))
             self.platform_list = new_platform_list            
             
-            
         inter.update()
         clock.tick()
       
@@ -629,8 +618,7 @@ class Interaction:
                
             player.draw(canvas)
             
-            
-        #code for the doors
+            #code for the doors
             if self.stage == 0:
                 if (self.player.pos.x>805) and (self.open==False):
                     self.player.pos.x = 805
@@ -652,8 +640,6 @@ class Interaction:
                         self.open  = True
                         self.give_info(canvas,"  The door is now open!",2)
                         self.keyboard.flag4==False
-
-                    
                     
             for x in self.entities:
                 x.draw(canvas)
@@ -662,7 +648,6 @@ class Interaction:
     
     #code for displaying info boxes
     def give_info(self,canvas,info,door):
-        
         if door==1:
             canvas.draw_line((235, 322),  (340, 322), 15, 'white')
 
@@ -682,7 +667,6 @@ class Interaction:
             
             canvas.draw_text(info, (705, 265), 9, 'black')
             
-
     def player_fell(self):
         self.player.lifes -= 1
         self.player.pos = Vector(115, 380)
@@ -690,7 +674,6 @@ class Interaction:
         if self.player.lifes == 0:
             self.player.game_over = True
     
-
     def update(self):
         if self.player.game_over:
             self.previous_stage = self.stage
@@ -700,7 +683,6 @@ class Interaction:
             self.player.lifes = 3
             self.did_die = True
             self.time_left = 120
-            
             
         mouseReturn = self.mouse.clickPos()     
         if self.stage < 0:
@@ -739,7 +721,6 @@ class Interaction:
                 self.player.ammo = 7
                 self.player.ammo_capacity = 21
 
-
             if self.keyboard.left:
                 if self.stage == 0 and self.player.pos.x <= 0:
                     self.background_x += 0
@@ -754,9 +735,6 @@ class Interaction:
             if self.keyboard.r:
                 self.player.reload()
                 
-                
-           
-            
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
                     self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
@@ -783,7 +761,6 @@ class Interaction:
             if self.player.pos.x > self.current_platform.right or self.player.pos.x < self.current_platform.left:
                 self.player.on_ground = False
                  
-          
             if self.player.pos.y >= 480:
                 player_hit.play()
                 player_hit.rewind()
@@ -824,9 +801,7 @@ class Interaction:
                             x.hitByBullet(b) 
                         else:				#this means the bullet came from a flying zombie
                             player.hitByEnemy(b) #we send the bullet as it was any other colliding enemy
-                            
-                            
-                            
+                                   
                 if isinstance(x,BossZombie) == False:
                     for platform in self.platform_list:
                         if x.pos.y >= platform.ground_level and x.pos.x >= platform.left and x.pos.x <= platform.right:
@@ -837,8 +812,6 @@ class Interaction:
                             if x.pos.x > x.current_platform.right or x.pos.x < x.current_platform.left:
                                 x.rotate = False
 
-
-        
 #Defining sprites
 bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (12.5, 12.5), (25, 25))
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheetV2.png"), ((610/12)*3, 329/6), (610/6, 329/3))
@@ -849,7 +822,6 @@ playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/
 gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
 green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_green_rooftop.png"),(754/2,754/2),(754,754))
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
- 
 
 #creating a list to store the platforms
 platform_list = []
@@ -863,7 +835,6 @@ kbd = Keyboard()
 clock = Clock()
 
 player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
-
 
 EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
 #when added zombie y pos, add +25 to their actual position 
