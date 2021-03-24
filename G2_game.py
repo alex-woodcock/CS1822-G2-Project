@@ -38,6 +38,7 @@ locked_door.set_volume(0.5)
 door_opening = simplegui.load_sound('http://personal.rhul.ac.uk/zjac/379/door_opening.mp3')
 door_opening.set_volume(0.5)
 
+
 ##For non-spritesheet based sprites
 class Sprite:
     def __init__(self, IMG, IMG_CENTRE, IMG_DIMS):
@@ -46,6 +47,7 @@ class Sprite:
         self.IMG_DIMS = IMG_DIMS
         self.img_dest_dim = (self.IMG_DIMS[0]*0.50, self.IMG_DIMS[1]*0.50)
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
+
     def draw(self, canvas, pos):
         canvas.draw_image(self.IMG, self.IMG_CENTRE, self.IMG_DIMS, [pos.x,pos.y], self.img_dest_dim, 0)
 
@@ -235,7 +237,6 @@ class FlyingZombie(Zombie):
         
         
     def update(self):
-        #add zombie shooting here
         if clock.transition(200):
             bullet_sound.play()
             bullet_sound.rewind()
@@ -443,16 +444,11 @@ class Keyboard:
                 self.flag= False 
             if self.flag2==True :
                 door_opening.play()
-
                 self.flag2==False
-        
         if key == simplegui.KEY_MAP['u']:
             self.u = True
             
               
-
-                self.flag2==False        
-
             
     def keyUp(self, key):
         if key == simplegui.KEY_MAP['a']:     
@@ -609,6 +605,7 @@ class Interaction:
             new_platform_list.append(OtherPlatform('grey',300,0,200))
             self.platform_list = new_platform_list            
             
+
         inter.update()
         clock.tick()
       
@@ -631,8 +628,15 @@ class Interaction:
                 canvas.draw_text('YOU ARE INVULNERABLE', (150, 240), 40, 'Red')
                
             player.draw(canvas)
-            
+             
+            #key code
+            for x in self.entities:
+                if(isinstance(x,BossZombie)):
+                    if (x.give_key==True):
+                        self.player.has_key = True
+                        canvas.draw_text("YOU GOT THE KEY", (240, 325), 40, 'yellow')
 
+        #code for the doors
             if self.stage == 0:
                 if (self.player.pos.x>805) and (self.open==False):
                     self.player.pos.x = 805
@@ -651,10 +655,6 @@ class Interaction:
                             self.drawIsTrue = False
                             self.stage = -10
 
-                        
-                        
-
-
                 if self.player.pos.x>=740:
                     self.keyboard.flag5 = True
                     self.keyboard.flag2=True
@@ -662,7 +662,7 @@ class Interaction:
                     if self.keyboard.flag4==True:
                         self.open  = True
                         self.give_info(canvas,"  The door is now open!",2)
-                        self.keyboard.flag4==False
+                        self.keyboard.flag4==False                   
                     
             for x in self.entities:
                 x.draw(canvas)
@@ -695,8 +695,8 @@ class Interaction:
         self.player.pos = Vector(115, 380)
         self.pl = "Gray"
         if self.player.lifes == 0:
-            self.player.game_over = True
-    
+            self.player.game_over = True   
+
     def update(self):
         if self.player.game_over:
             self.previous_stage = self.stage
@@ -725,8 +725,6 @@ class Interaction:
                     if (self.stage) == 0:
                         menu_music.rewind()
                         self.drawIsTrue = True
-                   
-
         else:
             if self.stage == 0:
                 if self.player.pos.x <= 0:
@@ -747,6 +745,7 @@ class Interaction:
                 self.player.ammo = 7
                 self.player.ammo_capacity = 21
 
+
             if self.keyboard.left:
                 if self.stage == 0 and self.player.pos.x <= 0:
                     self.background_x += 0
@@ -759,8 +758,8 @@ class Interaction:
                 self.player.run_right()
                 
             if self.keyboard.r:
-                self.player.reload()
-                
+                self.player.reload()         
+            
             if self.keyboard.space and self.player.on_ground:
                 if self.keyboard.last_direction == 'a':
                     self.player.sprite.IMG_CENTRE = ((610/12)*5,(329/6))
@@ -785,8 +784,8 @@ class Interaction:
                     self.current_platform = platform
                    
             if self.player.pos.x > self.current_platform.right or self.player.pos.x < self.current_platform.left:
-                self.player.on_ground = False
-                 
+                self.player.on_ground = False          
+          
             if self.player.pos.y >= 480:
                 player_hit.play()
                 player_hit.rewind()
@@ -799,7 +798,7 @@ class Interaction:
                 if timer == 120:
                     self.player.can_get_hit = True
                     timer = 0
-                
+                    
             player.update()
             
             #player shooting
@@ -827,8 +826,8 @@ class Interaction:
                             x.hitByBullet(b) 
                         else:				#this means the bullet came from a flying zombie
                             player.hitByEnemy(b) #we send the bullet as it was any other colliding enemy
-                                   
-                if isinstance(x,BossZombie) == False:
+                            
+               if isinstance(x,BossZombie) == False:
                     for platform in self.platform_list:
                         if x.pos.y >= platform.ground_level and x.pos.x >= platform.left and x.pos.x <= platform.right:
                             x.pos.y = platform.ground_level
@@ -838,17 +837,16 @@ class Interaction:
                             if x.pos.x > x.current_platform.right or x.pos.x < x.current_platform.left:
                                 x.rotate = False
 
+
+        
 #Defining sprites
 bulletSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/bullet_sprite.png"), (12.5, 12.5), (25, 25))
 playerSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/mc_spritesheetV2.png"), ((610/12)*3, 329/6), (610/6, 329/3))
 
-##USE FOR REFERENCE WHEN PROGRAMMING ONLY
-#zombieSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))
-
 gray_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_gray_rooftop.png"),(697 / 2, 697 / 2) ,(697, 697))
 green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/new_green_rooftop.png"),(754/2,754/2),(754,754))
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
-
+ 
 #creating a list to store the platforms
 platform_list = []
 platform_list.append(Platform("gray",Vector(155,305)))
@@ -863,7 +861,6 @@ clock = Clock()
 player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
-#when added zombie y pos, add +25 to their actual position 
 EnemiesStageTwo = [Zombie(Vector(340, 375)),Zombie(Vector(360, 375)),Zombie(Vector(380, 375)),Zombie(Vector(650, 325))]
 BossStage = [BossZombie(Vector(810, 400))]
 
