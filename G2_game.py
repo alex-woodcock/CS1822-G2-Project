@@ -114,7 +114,7 @@ class Player(Entity):
             bullet_sound.rewind()
             bullet_sound.play()
             aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
-            inter.bullets.append(Bullet(aimAt,Vector(self.pos.x,self.pos.y)))
+            inter.bullets.append(Bullet(aimAt,Vector(self.pos.x,self.pos.y), False))
             self.ammo -= 1
     
     def hitByEnemy(self, enemy):
@@ -254,9 +254,9 @@ class FlyingZombie(Zombie):
             bullet_sound.play()
             bullet_sound.rewind()
             bullet_sound.play()
-            aimAt = Vector(player.pos.x+self.pos.x, player.pos.y-self.pos.y )
-            bul = Bullet(aimAt,Vector(self.pos.x,self.pos.y)) # creating the bullet on it own
-            bul.zombie_bullet = True
+            aimAt = Vector(self.pos.x - player.pos.x, self.pos.y - player.pos.y)
+            bul = Bullet(aimAt,Vector(self.pos.x,self.pos.y), True) # creating the bullet on it own
+            #bul.zombie_bullet = True
             inter.bullets.append(bul)
             
         
@@ -336,16 +336,19 @@ class BossZombie(Zombie):
 class Bullet(Entity):
     ##Presets variables instead of needing them custom set, because it knows its a bullet
     ##Maybe add custom variable to initialiser for damage, speed? For different guns?
-    def __init__(self, aimAt,pos):
+    def __init__(self, aimAt, pos, zombie):
         self.sprite = bulletSprite
         ##Seems silly to do it like this, but direct referencing means shared position!
         self.pos = pos
         self.radius = max(4, 4)
-        self.zombie_bullet = False #determines whether the bullet comes from the player
+        self.zombie_bullet = zombie #determines whether the bullet comes from the player
                                 #or the zombie
                                 #used later so zombie sn't harmed by it's own bullets   
-        aimAt.normalize();			
-        self.velocity = -aimAt*20
+        aimAt.normalize()			
+        if (self.zombie_bullet):
+            self.velocity = -aimAt*10
+        else:
+            self.velocity = -aimAt*20
         
         self.toDelete = False
         
@@ -354,7 +357,7 @@ class Bullet(Entity):
     def update(self):
         self.pos.add(self.velocity)
         
-        if self.toDelete == True:
+        if self.toDelete == True and self.zombie_bullet == False:
             self.pos = Vector (-1000, -1000)
             self.velocity = self.velocity * 0
         
