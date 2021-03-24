@@ -125,6 +125,8 @@ class Player(Entity):
                 player_hit.rewind()
                 player_hit.play()
                 self.health -= 1
+                if isinstance(enemy, Bullet):
+                    enemy.toDelete = True
             #need to add invulnerability
             if self.health <= 0:
                 if self.lifes == 0:
@@ -357,7 +359,7 @@ class Bullet(Entity):
     def update(self):
         self.pos.add(self.velocity)
         
-        if self.toDelete == True and self.zombie_bullet == False:
+        if self.toDelete == True:
             self.pos = Vector (-1000, -1000)
             self.velocity = self.velocity * 0
         
@@ -821,7 +823,7 @@ class Interaction:
                             x.hitByBullet(b) 
                         else:				#this means the bullet came from a flying zombie
                             player.hitByEnemy(b) #we send the bullet as it was any other colliding enemy
-                            b.toDelete = True
+                            
                             
                             
                 if isinstance(x,BossZombie) == False:
