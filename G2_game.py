@@ -102,6 +102,7 @@ class Player(Entity):
         self.can_reload = True
         self.lifes = 3
         self.game_over = False
+        self.can_get_hit = True
         
     def shoot(self, coords):
         if self.ammo > 0:
@@ -113,28 +114,28 @@ class Player(Entity):
             bullet_sound.rewind()
             bullet_sound.play()
             aimAt = Vector(self.pos.x - coords[0], self.pos.y - coords[1])
-            inter.bullets.append(Bullet(aimAt))
+            inter.bullets.append(Bullet(aimAt,Vector(self.pos.x,self.pos.y)))
             self.ammo -= 1
     
     def hitByEnemy(self, enemy):
-        distance = self.pos.copy().subtract(enemy.pos).length()
-        if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
-            print("ive been hit")
-            player_hit.play()
-            player_hit.rewind()
-            player_hit.play()
-            self.health -= 1
-        #need to add invulnerability
-        if self.health <= 0:
-            if self.lifes == 0:
-                self.game_over = True
-            else:
-                self.lifes -= 1
-                self.pos = Vector(115, 380)
-                #temporary health
-                self.health = 10
-                self.ammo = 7
-                self.ammo_capacity = 21
+        if self.can_get_hit:
+            distance = self.pos.copy().subtract(enemy.pos).length()
+            if (distance - enemy.radius <= self.radius and isinstance(enemy, Enemy)):
+                player_hit.play()
+                player_hit.rewind()
+                player_hit.play()
+                self.health -= 1
+            #need to add invulnerability
+            if self.health <= 0:
+                if self.lifes == 0:
+                    self.game_over = True
+                else:
+                    self.lifes -= 1
+                    self.pos = Vector(115, 380)
+                    self.can_get_hit = False
+                    self.health = 10
+                    self.ammo = 7
+                    self.ammo_capacity = 21
                 
     def run_right(self):
         self.velocity.add(Vector(0.3, 0))
@@ -181,7 +182,6 @@ class Enemy(Entity):
     def hitByBullet(self, bullet):
         distance = self.pos.copy().subtract(bullet.pos).length()
         if (distance - bullet.radius <= self.radius and isinstance(bullet, Bullet)):
-            print("enemy who is me has been hit")
             self.health -= 1
             bullet.toDelete = True
 
@@ -250,6 +250,16 @@ class FlyingZombie(Zombie):
         
     def update(self):
         #add zombie shooting here
+        if clock.transition(200):
+            bullet_sound.play()
+            bullet_sound.rewind()
+            bullet_sound.play()
+            aimAt = Vector(player.pos.x+self.pos.x, player.pos.y-self.pos.y )
+            bul = Bullet(aimAt,Vector(self.pos.x,self.pos.y)) # creating the bullet on it own
+            bul.zombie_bullet = True
+            inter.bullets.append(bul)
+            
+        
         if self.health > 0:
             if clock.transition(self.frame_duration*15):  
                 if self.left_right == 'left':
@@ -280,14 +290,7 @@ class FlyingZombie(Zombie):
                     self.sprite.IMG_CENTRE = (img_centre_x+100,50)
                 else:
                     self.is_dead = True
-                    
-
-                    
-
-        
-        
-        
-        
+                      
         
 class BossZombie(Zombie):
     def __init__(self, pos):
@@ -333,14 +336,15 @@ class BossZombie(Zombie):
 class Bullet(Entity):
     ##Presets variables instead of needing them custom set, because it knows its a bullet
     ##Maybe add custom variable to initialiser for damage, speed? For different guns?
-    def __init__(self, aimAt):
+    def __init__(self, aimAt,pos):
         self.sprite = bulletSprite
         ##Seems silly to do it like this, but direct referencing means shared position!
-        self.pos = Vector(player.pos.x, player.pos.y)
+        self.pos = pos
         self.radius = max(4, 4)
-        
-        aimAt.normalize();
-        #No cool 180 spinz :(
+        self.zombie_bullet = False #determines whether the bullet comes from the player
+                                #or the zombie
+                                #used later so zombie sn't harmed by it's own bullets   
+        aimAt.normalize();			
         self.velocity = -aimAt*20
         
         self.toDelete = False
@@ -383,7 +387,25 @@ class Platform():
         self.sprite.draw(canvas,self.pos)
     
     def __repr__(self):
-            return str("This is platform" + str(self.ground_level))        
+            return str("This is platform" + str(self.ground_level))
+        
+class OtherPlatform():
+    def __init__(self,fill_colour,ground_level,left,right):
+        self.fill_colour = fill_colour
+        self.ground_level = ground_level-25
+        self.left = left
+        self.right= right
+        
+    def draw(self,canvas):
+        y = self.ground_level+25
+        left_x = self.left
+        right_x = self.right
+        canvas.draw_polygon([(left_x,y),(left_x,500),(right_x,500),(right_x,y)],
+                            5, 
+                            'black',
+                            self.fill_colour)
+        
+        
         
         
 class Clock():
@@ -470,7 +492,7 @@ class Interaction:
         self.player = player
         self.keyboard = keyboard
         self.platform_list = platform_list
-        self.pl = 0
+        
         self.current_platform = ''
         #self.entities = [Zombie(Vector(800, 347))]
         self.entities = stages[0]
@@ -478,10 +500,8 @@ class Interaction:
         
         self.mouse = mouseObject
         
-        #this variable keeps track of which platform the player is moving  
-        #it gets initialised with 0 , cause the player starts from the first rooftop
         self.drawIsTrue = False
-        self.pl = 0
+        
         self.stage = -6
         self.background_x = 854/2
         self.time_left = 120
@@ -490,7 +510,12 @@ class Interaction:
         
         self.shoot_timer = 0
         
+        self.did_die = False
+        self.previous_stage = 0
+        
     def draw(self, canvas):
+        
+        #deciding what sprite to show based on the stage the player's in
         if self.stage == -7:
             canvas.draw_image(GAME_OVER,
                               (2556/2,1440/2),
@@ -548,7 +573,7 @@ class Interaction:
                               0)            
             
               
-        if self.stage >= 0:    
+        if self.stage >= 0:    		#main level sprite drawing
             canvas.draw_image(BACKDROP_SPRITE, 
                               (2130/2,1200/2), 
                               (2130,1200), 
@@ -562,21 +587,29 @@ class Interaction:
                               (854,480), 
                               0)
             
-        #if self.stage == 1:
-            #new_platform_list = []
-            #new_platform_list.append(Platform("red",Vector(155,320)))
-            #self.platform_list = new_platform_list
+        if self.stage == 0:
+            new_platform_list = []
+            new_platform_list.append(Platform("gray",Vector(155,305)))
+            new_platform_list.append(Platform("green",Vector(550,305)))
+            new_platform_list.append(Platform("red",Vector(790,320)))
+            self.platform_list = new_platform_list
+        
+        
+        if self.stage == 1:
+            new_platform_list = []
+            new_platform_list.append(OtherPlatform('red',350,0,500))
+            new_platform_list.append(OtherPlatform('grey',400,600,854))
+            self.platform_list = new_platform_list
+            
+        if self.stage == 2:
+            new_platform_list = []
+            new_platform_list.append(OtherPlatform('grey',400,0,200))
+            self.platform_list = new_platform_list            
             
             
         inter.update()
         clock.tick()
-        
-        
-        if (self.player.pos.x>805) and (self.open==False):
-            self.player.pos.x = 805
-            
-       
-        
+      
         if self.drawIsTrue:
             time_left = str(self.time_left)
             ammo = str(self.player.ammo)
@@ -589,35 +622,35 @@ class Interaction:
             if clock.transition(100):
                 self.time_left -= 1
           
-            for platform in self.platform_list:
+            for platform in self.platform_list: 
                 platform.draw(canvas)
                
-
-            #this lne is just for measuring it will be deleted later 
-            canvas.draw_line((805, 270), (820, 270), 1, 'Red')
-
             player.draw(canvas)
             
             
         #code for the doors
-            if self.player.pos.x >=190 and self.player.pos.x<=230: 
-                self.keyboard.flag=True
-                #third argument decides which door it is
-                self.give_info(canvas,"Press 'O' to open the door",1)
-                if self.keyboard.flag3 == True:
-                    self.give_info(canvas,"    This door is locked!",1)
-                    self.keyboard.flag3==False
-                    
-                
-            if self.player.pos.x>=740:
-                self.keyboard.flag5 = True
-                self.keyboard.flag2=True
-                self.give_info(canvas,"Press 'O' to open the door",2)
-                if self.keyboard.flag4==True:
-                    self.open  = True
-                    self.give_info(canvas,"  The door is now open!",2)
-                    self.keyboard.flag4==False
-            
+            if self.stage == 0:
+                if (self.player.pos.x>805) and (self.open==False):
+                    self.player.pos.x = 805
+
+                if self.player.pos.x >=190 and self.player.pos.x<=230: 
+                    self.keyboard.flag=True
+                    #third argument decides which door it is
+                    self.give_info(canvas,"Press 'O' to open the door",1)
+                    if self.keyboard.flag3 == True:
+                        self.give_info(canvas,"    This door is locked!",1)
+                        self.keyboard.flag3==False
+
+
+                if self.player.pos.x>=740:
+                    self.keyboard.flag5 = True
+                    self.keyboard.flag2=True
+                    self.give_info(canvas,"Press 'O' to open the door",2)
+                    if self.keyboard.flag4==True:
+                        self.open  = True
+                        self.give_info(canvas,"  The door is now open!",2)
+                        self.keyboard.flag4==False
+
                     
                     
             for x in self.entities:
@@ -658,18 +691,24 @@ class Interaction:
 
     def update(self):
         if self.player.game_over:
+            self.previous_stage = self.stage
             self.drawIsTrue = False
             self.stage = -7
             self.player.game_over = False
             self.player.lifes = 3
+            self.did_die = True
             
             
         mouseReturn = self.mouse.clickPos()     
         if self.stage < 0:
             menu_music.play()
             if mouseReturn != None:
-                if self.stage == -7:
-                    self.stage = -1
+                if self.did_die:
+                    if self.stage == -7:
+                        self.stage = -1
+                    if self.stage + 1 == 0:
+                        self.stage = self.previous_stage
+                        self.drawIsTrue = True
                 else:    
                     self.stage += 1
                     if (self.stage) == 0:
@@ -684,16 +723,15 @@ class Interaction:
                 if self.player.pos.x <= 0:
                     self.stage -= 1
                     self.player.pos.x = 854
+                    self.entities = stages[self.stage]
             if self.player.pos.x > 854:
                 #Uses stage number to load from array of preset stages
                 
                 self.stage += 1
                 if (self.stage >= len(stages)):
                     self.stage = len(stages)
-                print(self.stage)
                 self.entities = stages[self.stage]
                 self.player.pos.x = 0
-                self.player.pos.y = 380
                 self.player.ammo = 7
                 self.player.ammo_capacity = 21
 
@@ -730,7 +768,8 @@ class Interaction:
             if self.player.on_ground == False:
                 self.player.velocity.add(Vector(0, 0.75))
             
-            
+           #the following code checks in what platform the player is moving on.
+           #And saves that in self.current_platform	
             for platform in self.platform_list:
                 if self.player.pos.y >= platform.ground_level and self.player.pos.x >= platform.left and self.player.pos.x <= platform.right:
                     self.player.pos.y = platform.ground_level
@@ -741,20 +780,20 @@ class Interaction:
                 self.player.on_ground = False
                  
           
-                 
-            
-            
-            #Below code checks if player is on floor, should change for platform
-
             if self.player.pos.y >= 480:
                 player_hit.play()
                 player_hit.rewind()
                 player_hit.play()
-                self.player_fell() 
-
-            
+                self.player_fell()
+                
+             
+            if self.player.can_get_hit == False:
+                if clock.transition(250):
+                    self.player.can_get_hit = True
+                
             player.update()
             
+            #player shooting
             if mouseReturn != None:
                 if self.shoot_timer <= 0:
                     player.shoot(mouseReturn)
@@ -772,10 +811,17 @@ class Interaction:
                         player.hitByEnemy(x)
                 if x.is_dead == True:
                     self.entities.remove(x)
+                    
                 if (isinstance(x, Enemy)):
                     for b in self.bullets:
-                        x.hitByBullet(b)
-                if isinstance(x,BossZombie) == False:       
+                        if b.zombie_bullet == False: # this means the bullet came from the player
+                            x.hitByBullet(b) 
+                        else:				#this means the bullet came from a flying zombie
+                            player.hitByEnemy(b) #we send the bullet as it was any other colliding enemy
+                            b.toDelete = True
+                            
+                            
+                if isinstance(x,BossZombie) == False:
                     for platform in self.platform_list:
                         if x.pos.y >= platform.ground_level and x.pos.x >= platform.left and x.pos.x <= platform.right:
                             x.pos.y = platform.ground_level
@@ -814,16 +860,17 @@ player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 
 EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
+#when added zombie y pos, add +25 to their actual position 
+EnemiesStageTwo = [Zombie(Vector(340, 375)),Zombie(Vector(360, 375)),Zombie(Vector(380, 375)),Zombie(Vector(650, 425))]
 BossStage = [BossZombie(Vector(810, 400))]
-EnemiesStageTwo = [Zombie(Vector(500, 300)), Zombie(Vector(550, 300)), Zombie(Vector(600, 300)), Zombie(Vector(340, 380))];
-EnemiesStageThree = [Zombie(Vector(750, 347)), Zombie(Vector(800, 347)), Zombie(Vector(550, 300)), Zombie(Vector(600, 300))];
+
 VictoryScreen = []
 
 stages = [EnemiesStageOne, EnemiesStageTwo, BossStage, VictoryScreen]
 
 inter = Interaction(player, kbd, platform_list, Mouse())
 
-# Create a frame and assign callbacks to event handlers
+# Frame creation and assignment of callbacks to event handlers
 frame = simplegui.create_frame("G2 game", CANVAS_WIDTH, CANVAS_HEIGHT)
 frame.set_canvas_background('#2C6A6A')
 frame.set_draw_handler(inter.draw)
