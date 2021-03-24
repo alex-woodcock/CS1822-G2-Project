@@ -48,7 +48,7 @@ class Sprite:
     def draw(self, canvas, pos):
         canvas.draw_image(self.IMG, self.IMG_CENTRE, self.IMG_DIMS, [pos.x,pos.y], self.img_dest_dim, 0)
 
-##All Entities have: An assigned sprite, Position, Radius (idk what that does), Movement speed, Jump height
+##All Entities have: An assigned sprite, Position, Radius, Movement speed, Jump height
 class Entity():
     def __init__(self, sprite, pos, radius, speed, jumpheight, frame_duration, health):
         self.sprite = sprite      
@@ -61,6 +61,7 @@ class Entity():
         self.is_dead = False
         self.health = health
         self.on_ground = True
+        
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
         self.sprite.draw(canvas, self.pos)
@@ -329,7 +330,7 @@ class Bullet(Entity):
                                 #used later so zombie sn't harmed by it's own bullets   
         aimAt.normalize()			
         if (self.zombie_bullet):
-            self.velocity = -aimAt*10
+            self.velocity = -aimAt*6
         else:
             self.velocity = -aimAt*20
         
