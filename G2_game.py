@@ -37,7 +37,6 @@ locked_door.set_volume(0.5)
 door_opening = simplegui.load_sound('http://personal.rhul.ac.uk/zjac/379/door_opening.mp3')
 door_opening.set_volume(0.5)
 
-
 ##For non-spritesheet based sprites
 class Sprite:
     def __init__(self, IMG, IMG_CENTRE, IMG_DIMS):
@@ -46,15 +45,8 @@ class Sprite:
         self.IMG_DIMS = IMG_DIMS
         self.img_dest_dim = (self.IMG_DIMS[0]*0.50, self.IMG_DIMS[1]*0.50)
         self.img_pos = [CANVAS_DIMS[0]/2, CANVAS_DIMS[1]/2]
-    #Pos = Position in game world
     def draw(self, canvas, pos):
         canvas.draw_image(self.IMG, self.IMG_CENTRE, self.IMG_DIMS, [pos.x,pos.y], self.img_dest_dim, 0)
-
-##Must be edited to handle spritesheets
-class Spritesheet(Sprite):
-    def __init__(self):#<--- spritesheet variable stuff
-        #do stuff
-        a = True
 
 ##All Entities have: An assigned sprite, Position, Radius (idk what that does), Movement speed, Jump height
 class Entity():
