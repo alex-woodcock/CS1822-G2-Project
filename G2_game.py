@@ -279,10 +279,12 @@ class FlyingZombie(Zombie):
             if self.left_right == 'right':
                 self.pos.add(Vector(0.5* self.speed/10,0))
                 if clock.transition(self.frame_duration):
-                    img_centre_x = 450
-                    if (img_centre_x + 100) > 650:
-                        img_centre_x = 450            
-                    self.sprite.IMG_CENTRE = (img_centre_x+100,150)                        
+                    img_centre_x = self.sprite.IMG_CENTRE[0]
+                    if (img_centre_x + 100) >= 650:
+                        print("BRUH")
+                        img_centre_x = 350            
+                    self.sprite.IMG_CENTRE = (img_centre_x+100,150)
+                    
         if self.health <= 0:
             zombie_death.play()
             self.pos.add(Vector(0,5))
