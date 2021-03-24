@@ -20,6 +20,7 @@ STORY2_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story2
 STORY3_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story3.png') 
 STORY4_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story4.png') 
 STORY5_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/story5.png')
+YOU_WIN_SPRITE = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/you_win.png')
 GAME_OVER = simplegui.load_image('http://personal.rhul.ac.uk/zhac/315/game_over.png') 
 #sounds
 bullet_sound = simplegui.load_sound('http://personal.rhul.ac.uk/zhac/315/bullet_shot.mp3')
@@ -69,9 +70,6 @@ class Entity():
         self.is_dead = False
         self.health = health
         self.on_ground = True
-        
-        self.ammo = 7
-        self.can_shoot = True
     #Drawing is handled by the sprite (so that spritesheets etc can be more easily handled)
     def draw(self, canvas):
         self.sprite.draw(canvas, self.pos)
@@ -98,18 +96,14 @@ class Player(Entity):
         self.on_ground = True
         self.ammo = 7
         self.ammo_capacity = 21
-        self.can_shoot = True
         self.can_reload = True
         self.lifes = 3
         self.game_over = False
         self.can_get_hit = True
+        self.has_key = False
         
     def shoot(self, coords):
         if self.ammo > 0:
-            self.can_shoot = True
-        if self.ammo == 0:
-            self.can_shoot = False
-        if self.can_shoot == True:
             bullet_sound.play()
             bullet_sound.rewind()
             bullet_sound.play()
@@ -256,7 +250,7 @@ class FlyingZombie(Zombie):
             bullet_sound.play()
             bullet_sound.rewind()
             bullet_sound.play()
-            aimAt = Vector(self.pos.x - player.pos.x, self.pos.y - player.pos.y)
+            aimAt = Vector((self.pos.x - player.pos.x),(self.pos.y - player.pos.y))
             bul = Bullet(aimAt,Vector(self.pos.x,self.pos.y), True) # creating the bullet on it own
             #bul.zombie_bullet = True
             inter.bullets.append(bul)
@@ -281,7 +275,6 @@ class FlyingZombie(Zombie):
                 if clock.transition(self.frame_duration):
                     img_centre_x = self.sprite.IMG_CENTRE[0]
                     if (img_centre_x + 100) >= 650:
-                        print("BRUH")
                         img_centre_x = 350            
                     self.sprite.IMG_CENTRE = (img_centre_x+100,150)
                     
@@ -310,6 +303,7 @@ class BossZombie(Zombie):
         self.health = 20
         self.on_ground = True
         self.left_right = 'left'
+        self.give_key = False #indcates if the key is given or not
         
     def update(self):
         if self.health > 0:                      
@@ -328,6 +322,7 @@ class BossZombie(Zombie):
                         img_centre_x = 50.8            
                     self.sprite.IMG_CENTRE = (img_centre_x+101.6,55*5)                                
         if self.health <= 0:
+            self.give_key = True #he'd dead so the player gets the key 
             zombie_death.play()
             if clock.transition(self.frame_duration):
                 img_centre_x = self.sprite.IMG_CENTRE[0]
@@ -436,6 +431,7 @@ class Keyboard:
         self.space = False
         self.r = False
         self.o = False
+        self.u = False
         self.flag = False #controls the sound of the fisrt door
         self.flag2=False #controls the sound of the second door
         self.flag3 = False	#controls message for the first door
@@ -464,6 +460,10 @@ class Keyboard:
             if self.flag2==True :
                 door_opening.play()
                 self.flag2==False
+        
+        if key == simplegui.KEY_MAP['u']:
+            self.u = True
+            
               
             
     def keyUp(self, key):
@@ -573,13 +573,20 @@ class Interaction:
             
         if self.stage == -1:
             canvas.draw_image(STORY5_SPRITE,
-                              (2800/2,1577/2),
-                              (2800,1577),
+                              (2556/2,1440/2),
+                              (2556,1440),
                               (854/2,480/2),
                               (854,480),
-                              0)            
+                              0)  
             
-              
+        if self.stage < -7:
+            canvas.draw_image(YOU_WIN_SPRITE,
+                              (2556/2,1440/2),
+                              (2556,1440),
+                              (854/2,480/2),
+                              (854,480),
+                              0)
+                                                  
         if self.stage >= 0:    		#main level sprite drawing
             canvas.draw_image(BACKDROP_SPRITE, 
                               (2130/2,1200/2), 
@@ -594,6 +601,8 @@ class Interaction:
                               (854,480), 
                               0)
             
+            
+            
         if self.stage == 0:
             new_platform_list = []
             new_platform_list.append(Platform("gray",Vector(155,305)))
@@ -605,12 +614,12 @@ class Interaction:
         if self.stage == 1:
             new_platform_list = []
             new_platform_list.append(OtherPlatform('red',350,0,500))
-            new_platform_list.append(OtherPlatform('grey',400,600,854))
+            new_platform_list.append(OtherPlatform('grey',300,600,854))
             self.platform_list = new_platform_list
             
         if self.stage == 2:
             new_platform_list = []
-            new_platform_list.append(OtherPlatform('grey',400,0,200))
+            new_platform_list.append(OtherPlatform('grey',300,0,200))
             self.platform_list = new_platform_list            
             
             
@@ -638,18 +647,37 @@ class Interaction:
             player.draw(canvas)
             
             
+            
+            #key code
+            for x in self.entities:
+                if(isinstance(x,BossZombie)):
+                    if (x.give_key==True):
+                        self.player.has_key = True
+                        canvas.draw_text("YOU GOT THE KEY", (240, 325), 40, 'yellow')
+            
+            
+            
         #code for the doors
             if self.stage == 0:
                 if (self.player.pos.x>805) and (self.open==False):
                     self.player.pos.x = 805
 
                 if self.player.pos.x >=190 and self.player.pos.x<=230: 
-                    self.keyboard.flag=True
-                    #third argument decides which door it is
-                    self.give_info(canvas,"Press 'O' to open the door",1)
-                    if self.keyboard.flag3 == True:
-                        self.give_info(canvas,"    This door is locked!",1)
-                        self.keyboard.flag3==False
+                    if self.player.has_key==False:
+                        self.keyboard.flag=True
+                        #third argument decides which door it is
+                        self.give_info(canvas,"   Press 'O' to open the door",1)
+                        if self.keyboard.flag3 == True:
+                            self.give_info(canvas,"Locked door!The boss has the key.",1)
+                            self.keyboard.flag3==False
+                    else:	#means the player has killed the boss so he has the key
+                        self.give_info(canvas,"   Press 'U' to unlock the door",1)
+                        if self.keyboard.u==True:
+                            self.drawIsTrue = False
+                            self.stage = -10
+
+                        
+                        
 
 
                 if self.player.pos.x>=740:
@@ -667,17 +695,17 @@ class Interaction:
                 x.draw(canvas)
             for i in self.bullets:
                 i.draw(canvas)
-    
+       
     #code for displaying info boxes
     def give_info(self,canvas,info,door):
         
         if door==1:
-            canvas.draw_line((235, 322),  (340, 322), 15, 'white')
+            canvas.draw_line((235, 322),  (370, 322), 15, 'white')
 
-            canvas.draw_line((235, 315), (340, 315), 1, 'black')
-            canvas.draw_line((235, 330), (340, 330), 1, 'black')
+            canvas.draw_line((235, 315), (370, 315), 1, 'black')
+            canvas.draw_line((235, 330), (370, 330), 1, 'black')
             canvas.draw_line((235, 315), (235, 330), 1, 'black')
-            canvas.draw_line((340, 315), (340, 330), 1, 'black')
+            canvas.draw_line((370, 315), (370, 330), 1, 'black')
 
             canvas.draw_text(info, (240, 325), 9, 'black')
         else:
@@ -714,6 +742,8 @@ class Interaction:
         if self.stage < 0:
             menu_music.play()
             if mouseReturn != None:
+                if self.stage == -10:
+                    self.stage -= 1
                 if self.did_die:
                     if self.stage == -7:
                         self.stage = -1
@@ -726,6 +756,7 @@ class Interaction:
                     if (self.stage) == 0:
                         menu_music.rewind()
                         self.drawIsTrue = True
+                   
 
         else:
             if self.stage == 0:
@@ -752,11 +783,11 @@ class Interaction:
                 if self.stage == 0 and self.player.pos.x <= 0:
                     self.background_x += 0
                 else:
-                    self.background_x += 0.02
+                    self.background_x += 0.05
                     self.player.run_left()
          
             if self.keyboard.right:
-                self.background_x -= 0.02
+                self.background_x -= 0.05
                 self.player.run_right()
                 
             if self.keyboard.r:
@@ -875,7 +906,7 @@ player = Player(playerSprite, Vector(115, 380), 25, 10, 20, 5, 3)
 
 EnemiesStageOne = [Zombie(Vector(800, 347)), Zombie(Vector(600, 300)),Zombie(Vector(320, 380)),  FlyingZombie(Vector(600,100))]
 #when added zombie y pos, add +25 to their actual position 
-EnemiesStageTwo = [Zombie(Vector(340, 375)),Zombie(Vector(360, 375)),Zombie(Vector(380, 375)),Zombie(Vector(650, 425))]
+EnemiesStageTwo = [Zombie(Vector(340, 375)),Zombie(Vector(360, 375)),Zombie(Vector(380, 375)),Zombie(Vector(650, 325))]
 BossStage = [BossZombie(Vector(810, 400))]
 
 VictoryScreen = []
