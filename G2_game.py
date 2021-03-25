@@ -149,7 +149,6 @@ class Player(Entity):
             self.can_reload = False
         if self.can_reload:
             gun_reload.play()
-            ##Shoot timer handled by Interaction instead of player?
             inter.shoot_timer=60
             if self.ammo == 0:
                 if self.ammo_capacity <= 7:
@@ -167,16 +166,13 @@ class Player(Entity):
                     self.ammo_capacity -= ammo_used
                     self.ammo = 7
     
-##Creation of Enemy class as subclass of Entity should let us
-##add a "hit by bullet" function? Or maybe that should be entity as default
 class Enemy(Entity):
     def hitByBullet(self, bullet):
         distance = self.pos.copy().subtract(bullet.pos).length()
         if (distance - bullet.radius <= self.radius and isinstance(bullet, Bullet)):
             self.health -= 1
             bullet.toDelete = True
-
-#zombie = Zombie(zombieSprite, Vector(800, 347), 50, 10, 20, 20, 10)      
+   
 class Zombie(Enemy):
     def __init__(self, pos):
         self.sprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zhac/315/zombie_sheet.png"), (51, 55*3), (100, 100))     
@@ -376,9 +372,6 @@ class Platform():
             
     def draw(self,canvas):
         self.sprite.draw(canvas,self.pos)
-    
-    def __repr__(self):
-            return str("This is platform" + str(self.ground_level))
         
 class OtherPlatform():
     def __init__(self,fill_colour,ground_level,left,right):
@@ -514,7 +507,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)             
-            
         if self.stage == -6:
             canvas.draw_image(STARTMENU_SPRITE,
                               (2556/2,1440/2),
@@ -522,7 +514,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)            
-               
         if self.stage == -5:
             canvas.draw_image(STORY1_SPRITE,
                               (2556/2,1440/2),
@@ -530,7 +521,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)
-            
         if self.stage == -4:
             canvas.draw_image(STORY2_SPRITE,
                               (2556/2,1440/2),
@@ -538,7 +528,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)
-            
         if self.stage == -3:
             canvas.draw_image(STORY3_SPRITE,
                               (2556/2,1440/2),
@@ -546,7 +535,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)
-            
         if self.stage == -2:
             canvas.draw_image(STORY4_SPRITE,
                               (2130/2,1200/2),
@@ -554,7 +542,6 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)
-            
         if self.stage == -1:
             canvas.draw_image(STORY5_SPRITE,
                               (2556/2,1440/2),
@@ -562,15 +549,13 @@ class Interaction:
                               (854/2,480/2),
                               (854,480),
                               0)  
-            
         if self.stage < -7:
             canvas.draw_image(YOU_WIN_SPRITE,
                               (2556/2,1440/2),
                               (2556,1440),
                               (854/2,480/2),
                               (854,480),
-                              0)
-                                                  
+                              0)                                  
         if self.stage >= 0:    		#main level sprite drawing
             canvas.draw_image(BACKDROP_SPRITE, 
                               (2130/2,1200/2), 
@@ -584,29 +569,22 @@ class Interaction:
                               (self.background_x+844,480/2), 
                               (854,480), 
                               0)
-            
-            
-            
         if self.stage == 0:
             new_platform_list = []
             new_platform_list.append(Platform("gray",Vector(155,305)))
             new_platform_list.append(Platform("green",Vector(550,305)))
             new_platform_list.append(Platform("red",Vector(790,320)))
             self.platform_list = new_platform_list
-        
-        
         if self.stage == 1:
             new_platform_list = []
             new_platform_list.append(OtherPlatform('red',350,0,500))
             new_platform_list.append(OtherPlatform('grey',300,600,854))
             self.platform_list = new_platform_list
-            
         if self.stage == 2:
             new_platform_list = []
             new_platform_list.append(OtherPlatform('grey',300,0,200))
             self.platform_list = new_platform_list            
             
-
         inter.update()
         clock.tick()
       
@@ -637,7 +615,7 @@ class Interaction:
                         self.player.has_key = True
                         canvas.draw_text("YOU GOT THE KEY", (240, 325), 40, 'yellow')
 
-        #code for the doors
+            #code for the doors
             if self.stage == 0:
                 if (self.player.pos.x>805) and (self.open==False):
                     self.player.pos.x = 805
@@ -737,7 +715,6 @@ class Interaction:
                     self.entities = stages[self.stage]
             if self.player.pos.x > 854:
                 #Uses stage number to load from array of preset stages
-                
                 self.stage += 1
                 if (self.stage >= len(stages)):
                     self.stage = len(stages)
@@ -828,7 +805,7 @@ class Interaction:
                         else:				#this means the bullet came from a flying zombie
                             player.hitByEnemy(b) #we send the bullet as it was any other colliding enemy
                             
-               if isinstance(x,BossZombie) == False:
+                if isinstance(x,BossZombie) == False:
                     for platform in self.platform_list:
                         if x.pos.y >= platform.ground_level and x.pos.x >= platform.left and x.pos.x <= platform.right:
                             x.pos.y = platform.ground_level
@@ -849,10 +826,7 @@ green_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zj
 red_rooftopSprite = Sprite(simplegui.load_image("http://personal.rhul.ac.uk/zjac/379/red_rooftop.png"),(800/2,800/2),(800,800))
  
 #creating a list to store the platforms
-platform_list = []
-platform_list.append(Platform("gray",Vector(155,305)))
-platform_list.append(Platform("green",Vector(550,305)))
-platform_list.append(Platform("red",Vector(790,320)))
+platform_list = [Platform("gray",Vector(155,305)), Platform("green",Vector(550,305)), Platform("red",Vector(790,320))]
 
 timer = 0
 
